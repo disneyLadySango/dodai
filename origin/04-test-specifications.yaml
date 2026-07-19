@@ -1,0 +1,51 @@
+origin: dodai
+layer:
+  number: 4
+  name: test_specifications
+revision: 1
+specifications:
+  - id: spec_origin_change_reaches_all_projections
+    verifies: [ac_complete_regeneration]
+    given: A valid origin and its complete current projection set.
+    when: One origin statement changes and the person requests regeneration once.
+    then: Every active projection reflects the changed meaning and no projection requires a separate request.
+  - id: spec_unchanged_origin_is_stable
+    verifies: [ac_stable_regeneration]
+    given: A valid unchanged origin and projections previously produced from it.
+    when: The person requests regeneration again under the same approved conditions.
+    then: The regenerated projection set has no observable difference from the prior set.
+  - id: spec_two_roles_share_one_origin
+    verifies: [ac_role_projections]
+    given: One valid origin describing a minimal product journey.
+    when: The person requests its complete projection set.
+    then: The result includes an executable developer projection with passing verification and a human-readable stakeholder projection whose claims agree with that behavior.
+  - id: spec_solution_language_is_reported
+    verifies: [ac_story_vocabulary_warning]
+    given: A valid user story and a revision that introduces declared solution vocabulary into its pain.
+    when: The revised origin is checked.
+    then: The introduced vocabulary and affected story are reported as a layer violation.
+  - id: spec_guardrail_breach_revises_verification
+    verifies: [ac_outer_loop]
+    given: Representative telemetry that breaches an active guardrail without reaching an exit condition.
+    when: The telemetry is evaluated against the origin.
+    then: Revised test specifications are proposed while the user story and acceptance criterion remain unchanged.
+  - id: spec_exit_condition_records_loss
+    verifies: [ac_outer_loop]
+    given: Representative telemetry that reaches an active exit condition for a product bet.
+    when: The telemetry is evaluated against the origin.
+    then: A losing record identifying the disproven approach and evidence is appended to the affected user story.
+  - id: spec_rebuild_exposes_leaked_decisions
+    verifies: [ac_rebuild_comparison]
+    given: A valid origin and its complete current projection set.
+    when: All projections are discarded, regenerated from the origin, and compared with the prior behavior.
+    then: The result reports agreement or identifies each observable mismatch.
+  - id: spec_regeneration_stays_within_budget
+    verifies: [guardrail_regeneration_budget]
+    given: The sample product and documented reference conditions.
+    when: One complete regeneration is observed.
+    then: Elapsed time and variable model cost do not exceed the active thresholds.
+  - id: spec_persistent_mismatch_ends_bet
+    verifies: [exit_origin_representation]
+    given: Rebuild mismatches remain after consecutive representation revisions intended to resolve them.
+    when: The number of unsuccessful revisions reaches the active threshold.
+    then: The current origin-representation bet is marked for closure before another representation approach is pursued.

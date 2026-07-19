@@ -1,0 +1,19 @@
+origin: dodai
+layer:
+  number: 2
+  name: user_stories
+revision: 1
+stories:
+  - id: story_authority_drift
+    who: A product manager or engineer who delegates implementation to AI agents.
+    pain: Product intent, executable behavior, verification, and explanations diverge until the authoritative meaning is unclear.
+  - id: story_method_micromanagement
+    who: A product manager or engineer who delegates implementation to AI agents.
+    pain: Directing technical methods consumes attention that should be spent understanding and solving the business problem.
+  - id: story_repeated_translation
+    who: A person who communicates the same product intent to developers, stakeholders, and analysts.
+    pain: Re-expressing the same intent for each audience creates repeated effort and inconsistent meaning.
+  - id: story_failure_diagnosis
+    who: A person accountable for a product bet implemented with AI agents.
+    pain: When the bet fails, evidence does not reveal whether the problem understanding, chosen approach, or implementation was wrong.
+    losing_records: []

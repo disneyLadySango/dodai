@@ -1,0 +1,6 @@
+origin_digest: 670436ce1cc603c081f798ed669bed3ea0e989f52a65dcc5e292091a7c4b4e68
+renderer_version: '1'
+files:
+- developer/waitlist.py
+- developer/test_waitlist.py
+- stakeholder/brief.md

@@ -12,3 +12,12 @@
 # Common local files
 .DS_Store
 *.log
+
+# Python development and build output
+.venv/
+dist/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/

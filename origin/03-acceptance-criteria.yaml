@@ -1,0 +1,55 @@
+origin: dodai
+layer:
+  number: 3
+  name: acceptance_criteria
+revision: 1
+criteria:
+  - id: ac_complete_regeneration
+    kind: outcome
+    supports: [story_authority_drift, story_repeated_translation]
+    statement: One origin change can be reflected in every active projection through a single user action.
+  - id: ac_stable_regeneration
+    kind: outcome
+    supports: [story_authority_drift]
+    statement: Repeated regeneration from an unchanged origin produces no observable projection change.
+  - id: ac_role_projections
+    kind: outcome
+    supports: [story_repeated_translation]
+    statement: The same origin produces both an executable developer projection with verification and a human-readable stakeholder projection.
+  - id: ac_story_vocabulary_warning
+    kind: outcome
+    supports: [story_method_micromanagement]
+    statement: Solution vocabulary introduced into a user story is detected and reported without relying on human review.
+  - id: ac_outer_loop
+    kind: outcome
+    supports: [story_failure_diagnosis]
+    statement: Given representative telemetry, a guardrail breach proposes revised test specifications, while reaching an exit condition appends a losing record to the affected user story.
+  - id: ac_rebuild_comparison
+    kind: outcome
+    supports: [story_authority_drift, story_failure_diagnosis]
+    statement: A person can discard all projections, regenerate them from the origin, and observe whether their behavior differs from the prior projections.
+  - id: guardrail_regeneration_budget
+    kind: guardrail
+    supports: [ac_complete_regeneration]
+    statement: Complete regeneration of the sample product remains practical during interactive use.
+    measures:
+      - name: elapsed_time
+        comparator: less_than_or_equal_to
+        threshold: 120
+        unit: seconds
+      - name: variable_model_cost
+        comparator: less_than_or_equal_to
+        threshold: 1
+        unit: USD
+    observation_scope: One complete regeneration of the sample product under the documented reference conditions.
+    status: proposed_for_approval
+  - id: exit_origin_representation
+    kind: exit_condition
+    supports: [ac_rebuild_comparison]
+    statement: End the current origin-representation bet when rebuild mismatches persist through three consecutive representation revisions intended to resolve them.
+    measure:
+      name: consecutive_unsuccessful_representation_revisions
+      comparator: greater_than_or_equal_to
+      threshold: 3
+      unit: revisions
+    status: proposed_for_approval
