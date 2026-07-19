@@ -6,10 +6,12 @@ import json
 import re
 from pathlib import Path
 
-PRODUCT_NAME = "dodai Early Access"
-HEADLINE = "Keep product intent and delivery on the same foundation"
+PRODUCT_NAME = "dodai"
+HEADLINE = "One origin. Every projection. Less drift."
 VALUE_PROPOSITION = (
-    "Join the waitlist to explore origin-driven delivery without technical micromanagement."
+    "Keep product intent authoritative while producing consistent developer "
+    + "and stakeholder projections—without repeatedly translating intent or "
+    + "directing technical methods."
 )
 CALL_TO_ACTION = "Join the waitlist"
 

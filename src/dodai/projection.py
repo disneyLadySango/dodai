@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import textwrap
 from dataclasses import asdict, dataclass
 from hashlib import sha256
 from pathlib import Path
@@ -237,4 +238,13 @@ def _python_assignment(name: str, value: str) -> str:
     encoded = json.dumps(value, ensure_ascii=False)
     if len(name) + len(encoded) + 3 <= 100:
         return f"{name} = {encoded}"
-    return f"{name} = (\n    {encoded}\n)"
+    chunks = textwrap.wrap(
+        value,
+        width=72,
+        break_long_words=False,
+        break_on_hyphens=False,
+        drop_whitespace=False,
+        replace_whitespace=False,
+    )
+    expression = "\n    + ".join(json.dumps(chunk, ensure_ascii=False) for chunk in chunks)
+    return f"{name} = (\n    {expression}\n)"
