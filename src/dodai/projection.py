@@ -115,6 +115,13 @@ class ProjectionEngine:
         pin_digest = sha256(pin_text.encode()).hexdigest()
         return source, digest, origin_digest, pin_digest
 
+    def _projection_kind(self) -> str:
+        for path in sorted((self.root / "pins").glob("*.yaml")):
+            value = yaml.safe_load(path.read_text(encoding="utf-8"))
+            if isinstance(value, dict) and "projection_kind" in value:
+                return str(value["projection_kind"])
+        return "waitlist"
+
     def project(self, *, refresh: bool = False) -> ProjectionResult:
         source, digest, origin_digest, pin_digest = self._source_and_digest()
         cache_path = self.root / ".dodai" / "cache" / f"{digest}.yaml"
@@ -128,7 +135,7 @@ class ProjectionEngine:
                 encoding="utf-8",
             )
 
-        rendered = _render(content, digest, origin_digest, pin_digest)
+        rendered = _render(content, digest, origin_digest, pin_digest, self._projection_kind())
         projection_root = self.root / "projections"
         before = (
             {
@@ -148,8 +155,16 @@ class ProjectionEngine:
 
 
 def _render(
-    content: ProjectionContent, digest: str, origin_source_digest: str, pin_digest: str
+    content: ProjectionContent,
+    digest: str,
+    origin_source_digest: str,
+    pin_digest: str,
+    projection_kind: str,
 ) -> dict[str, str]:
+    if projection_kind == "brief":
+        return _render_brief(content, digest, origin_source_digest, pin_digest)
+    if projection_kind != "waitlist":
+        raise ValueError(f"Unsupported projection kind: {projection_kind}")
     product_name = _python_assignment("PRODUCT_NAME", content.product_name)
     headline = _python_assignment("HEADLINE", content.headline)
     value_proposition = _python_assignment("VALUE_PROPOSITION", content.value_proposition)
@@ -398,6 +413,7 @@ recognized without creating a duplicate.
             "origin_digest": digest,
             "origin_source_digest": origin_source_digest,
             "pin_digest": pin_digest,
+            "projection_kind": projection_kind,
             "renderer_version": RENDERER_VERSION,
             "files": [
                 "developer/waitlist.py",
@@ -410,6 +426,70 @@ recognized without creating a duplicate.
     return {
         "developer/waitlist.py": app,
         "developer/test_waitlist.py": test,
+        "stakeholder/brief.md": brief,
+        "manifest.yaml": manifest,
+    }
+
+
+def _render_brief(
+    content: ProjectionContent, digest: str, origin_source_digest: str, pin_digest: str
+) -> dict[str, str]:
+    product_name = _python_assignment("PRODUCT_NAME", content.product_name)
+    headline = _python_assignment("HEADLINE", content.headline)
+    value_proposition = _python_assignment("VALUE_PROPOSITION", content.value_proposition)
+    experience = f'''"""Generated executable meaning projection. Regenerate instead of editing."""
+
+{product_name}
+{headline}
+{value_proposition}
+
+
+def describe() -> dict[str, str]:
+    return {{
+        "product_name": PRODUCT_NAME,
+        "headline": HEADLINE,
+        "value_proposition": VALUE_PROPOSITION,
+    }}
+'''
+    test = """from experience import describe
+
+
+def test_executable_meaning_is_complete() -> None:
+    meaning = describe()
+    assert all(meaning.values())
+    assert set(meaning) == {"product_name", "headline", "value_proposition"}
+"""
+    brief = f"""# {content.product_name}
+
+## Audience
+
+{content.audience}
+
+## Promise
+
+**{content.headline}**
+
+{content.value_proposition}
+
+## Shared outcome
+
+{content.stakeholder_summary}
+"""
+    files = ["developer/experience.py", "developer/test_experience.py", "stakeholder/brief.md"]
+    manifest = yaml.safe_dump(
+        {
+            "origin_digest": digest,
+            "origin_source_digest": origin_source_digest,
+            "pin_digest": pin_digest,
+            "projection_kind": "brief",
+            "renderer_version": RENDERER_VERSION,
+            "files": files,
+        },
+        sort_keys=False,
+    )
+    return {
+        "developer/experience.py": experience,
+        "developer/test_experience.py": test,
         "stakeholder/brief.md": brief,
         "manifest.yaml": manifest,
     }

@@ -17,6 +17,7 @@ from dodai.outer_loop import evaluate_telemetry
 from dodai.projection import OpenAIContentProvider, ProjectionEngine, SampleContentProvider
 from dodai.rebuild import rebuild_and_compare
 from dodai.showcase import serve_showcase
+from dodai.workspace import initialize_workspace
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -58,6 +59,12 @@ def _parser() -> argparse.ArgumentParser:
     adopt.add_argument("proposal_path", type=Path)
     commands.add_parser("derivability", help="Reject projection meaning absent from the origin.")
     commands.add_parser("attribution", help="Attribute pending change to origin or pins.")
+    initialize = commands.add_parser("init", help="Initialize a new four-layer origin.")
+    initialize.add_argument("path", type=Path)
+    initialize.add_argument("--name", required=True)
+    initialize.add_argument("--who", required=True)
+    initialize.add_argument("--pain", required=True)
+    initialize.add_argument("--journey", required=True)
     return parser
 
 
@@ -140,6 +147,17 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "attribution":
         attribution = attribute_change(root)
         print(f"pending change: {attribution.cause}")
+        return 0
+    if args.command == "init":
+        destination = args.path.resolve()
+        initialize_workspace(
+            destination,
+            name=args.name,
+            who=args.who,
+            pain=args.pain,
+            journey=args.journey,
+        )
+        print(f"Initialized valid origin: {destination}")
         return 0
     return 2
 

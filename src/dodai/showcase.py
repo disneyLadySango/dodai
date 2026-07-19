@@ -16,6 +16,7 @@ from dodai.evolution import (
     LAYER_COLLECTIONS,
     CandidateRevision,
     approve_candidate,
+    candidate_from_proposal,
     prepare_candidate,
 )
 from dodai.outer_loop import evaluate_telemetry
@@ -44,17 +45,22 @@ def _projection_application(root: Path) -> Application:
     return cast(Application, create_application(root / ".dodai/demo/registrations.json"))
 
 
-def _guardrail_demonstration(root: Path) -> tuple[str, str]:
+def _guardrail_demonstration(root: Path) -> tuple[str, str, str | None]:
     with tempfile.TemporaryDirectory(prefix="dodai-showcase-") as directory:
         isolated = Path(directory)
         shutil.copytree(root / "origin", isolated / "origin")
         telemetry = root / "examples/telemetry/guardrail-breach.yaml"
         result = evaluate_telemetry(isolated, telemetry)
         if result.proposal_path is None:
-            return result.reason, "No proposal was produced."
+            return result.reason, "No proposal was produced.", None
         proposal = _mapping(result.proposal_path)["proposed_test_specification"]
+        candidate = candidate_from_proposal(root, result.proposal_path)
         action = result.action.replace("_", " ")
-        return result.reason, f"{action}: {proposal['id']} — {proposal['then']}"
+        return (
+            result.reason,
+            f"{action}: {proposal['id']} — {proposal['then']}",
+            candidate.candidate_id if candidate.valid else None,
+        )
 
 
 def _serve_projection(
@@ -78,7 +84,7 @@ def _serve_projection(
     return [body]
 
 
-def _render_showcase(root: Path, outcome: tuple[str, str] | None = None) -> str:
+def _render_showcase(root: Path, outcome: tuple[str, str, str | None] | None = None) -> str:
     manifest = _mapping(root / "projections/manifest.yaml")
     cache_path = root / ".dodai/cache" / f"{manifest['origin_digest']}.yaml"
     semantic = _mapping(cache_path)
@@ -87,6 +93,13 @@ def _render_showcase(root: Path, outcome: tuple[str, str] | None = None) -> str:
     developer_files = [path for path in projection_files if str(path).startswith("developer/")]
     result = ""
     if outcome:
+        adoption = ""
+        if outcome[2]:
+            adoption = f"""
+            <form method="post" action="/candidate/approve">
+              <input type="hidden" name="candidate_id" value="{outcome[2]}">
+              <button type="submit">Adopt as layer-four verification →</button>
+            </form>"""
         result = f"""
         <section class="result" id="result" aria-live="polite">
           <div><span class="result-label">Observed telemetry</span>
@@ -95,6 +108,7 @@ def _render_showcase(root: Path, outcome: tuple[str, str] | None = None) -> str:
             <strong>{escape(outcome[1])}</strong></div>
           <p>The demonstration ran in an isolated copy.
             The authoritative origin stayed unchanged.</p>
+          {adoption}
         </section>"""
     return f"""<!doctype html>
 <html lang="en">

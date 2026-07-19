@@ -77,6 +77,7 @@ def test_showcase_demonstrates_guardrail_without_mutating_origin(project: Path) 
     assert "Guardrail breached" in page
     assert "revise test specifications" in page.lower()
     assert "spec_regeneration_budget_" in page
+    assert "Adopt as layer-four verification" in page
     assert story_path.read_bytes() == before
 
 
