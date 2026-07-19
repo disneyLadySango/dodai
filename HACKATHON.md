@@ -24,8 +24,8 @@ Do not record private eligibility documents in this repository.
 
 ## Project gate
 
-- [ ] The project fits one track: Apps for Your Life, Work and Productivity, Developer Tools, or Education.
-- [ ] Codex is used meaningfully to build the project.
+- [x] The project fits one track: Apps for Your Life, Work and Productivity, Developer Tools, or Education.
+- [x] Codex is used meaningfully to build the project.
 - [ ] GPT-5.6 is used meaningfully and its contribution can be demonstrated.
 - [ ] The submitted project installs and runs consistently on its intended platform.
 - [ ] The project behaves as shown in the description and demo video.
@@ -63,14 +63,14 @@ Do not record private eligibility documents in this repository.
 
 - [x] The repository is public.
 - [x] A relevant open-source license is included.
-- [ ] The README contains complete setup and run instructions.
-- [ ] The README contains any required sample data or a safe way to obtain it.
-- [ ] The README contains complete test instructions.
-- [ ] The README documents the Codex collaboration workflow and where it accelerated development.
-- [ ] The README documents important human product, engineering, and design decisions.
-- [ ] The README documents how GPT-5.6 contributed to the result.
+- [x] The README contains complete setup and run instructions.
+- [x] The README contains any required sample data or a safe way to obtain it.
+- [x] The README contains complete test instructions.
+- [x] The README documents the Codex collaboration workflow and where it accelerated development.
+- [x] The README documents important human product, engineering, and design decisions.
+- [x] The README documents how GPT-5.6 contributed to the result.
 - [ ] The README distinguishes pre-existing work from submission-period work, if applicable.
-- [ ] A plugin or developer tool includes installation instructions, supported platforms, and a no-rebuild testing path.
+- [x] A plugin or developer tool includes installation instructions, supported platforms, and a no-rebuild testing path.
 
 ## Security and private submission data
 
