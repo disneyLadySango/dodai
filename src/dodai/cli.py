@@ -8,6 +8,7 @@ from dodai.origin import load_origin, validate_origin
 from dodai.outer_loop import evaluate_telemetry
 from dodai.projection import OpenAIContentProvider, ProjectionEngine, SampleContentProvider
 from dodai.rebuild import rebuild_and_compare
+from dodai.showcase import serve_showcase
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -33,6 +34,9 @@ def _parser() -> argparse.ArgumentParser:
     commands.add_parser(
         "rebuild-test", help="Rebuild projections and report observable differences."
     )
+    showcase = commands.add_parser("showcase", help="Run the judge-facing browser showcase.")
+    showcase.add_argument("--host", default="127.0.0.1")
+    showcase.add_argument("--port", type=int, default=8000)
     return parser
 
 
@@ -73,6 +77,9 @@ def main(argv: list[str] | None = None) -> int:
         for path in rebuild_result.differences:
             print(f"- {path}")
         return 1
+    if args.command == "showcase":
+        serve_showcase(root, args.host, args.port)
+        return 0
     return 2
 
 
