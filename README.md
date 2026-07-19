@@ -43,15 +43,28 @@ The sample provider exercises the complete deterministic projection path
 without credentials:
 
 ```bash
+uv sync --locked --extra dev
+bash scripts/demo.sh
+```
+
+The script validates the origin, shows the committed GPT-5.6 stakeholder
+projection, proves a cache-only rebuild, and evaluates a guardrail breach in a
+disposable copy. It does not modify the repository or call the OpenAI API.
+
+The individual commands are:
+
+```bash
 uv run dodai --root . lint
 uv run dodai --root . project --sample
 uv run dodai --root . project --sample
 uv run dodai --root . rebuild-test
 ```
 
-The first projection reports `changed`; the second reports `stable`. Generated
-developer code and tests live under `projections/developer/`, while the shared
-stakeholder explanation lives under `projections/stakeholder/`.
+The repository includes an approved bundle for its current origin, so repeated
+projection reports `stable` without an API request. A new origin digest reports
+`changed` when its first approved bundle is produced. Generated developer code
+and tests live under `projections/developer/`, while the shared stakeholder
+explanation lives under `projections/stakeholder/`.
 
 ## Derive content with GPT-5.6
 
@@ -160,6 +173,9 @@ is never stored in this public repository.
 The repository checklist is maintained in [HACKATHON.md](HACKATHON.md). A live
 demo, video, and Devpost submission are not claimed until they are actually
 observed.
+
+Submission drafts and the under-three-minute English shot list are in
+[`submission/`](submission/DEVPOST.md).
 
 ## License
 

@@ -1,6 +1,6 @@
 # OpenAI Build Week Compliance Checklist
 
-Last reviewed: 2026-07-19 JST
+Last reviewed: 2026-07-20 JST
 
 This document is the repository-local compliance baseline for OpenAI Build Week 2026. The [Official Rules](https://openai.devpost.com/rules) and official notices remain authoritative. If this checklist conflicts with them, follow the Official Rules and update this document.
 
@@ -27,21 +27,21 @@ Do not record private eligibility documents in this repository.
 - [x] The project fits one track: Apps for Your Life, Work and Productivity, Developer Tools, or Education.
 - [x] Codex is used meaningfully to build the project.
 - [x] GPT-5.6 is used meaningfully and its contribution can be demonstrated.
-- [ ] The submitted project installs and runs consistently on its intended platform.
+- [x] The submitted project installs and runs consistently on its intended platform.
 - [ ] The project behaves as shown in the description and demo video.
-- [ ] Work performed during the submission period is traceable through dated commits and Codex sessions.
+- [x] Work performed during the submission period is traceable through dated commits and Codex sessions.
 - [ ] If the project predates the submission period, prior work and new work are clearly separated and documented.
-- [ ] Third-party APIs, SDKs, data, models, libraries, assets, trademarks, music, and other materials are authorized and properly licensed.
+- [x] Third-party APIs, SDKs, data, models, libraries, assets, trademarks, music, and other materials are authorized and properly licensed.
 - [ ] The entrant owns the original contribution and it does not violate intellectual-property, contract, privacy, or publicity rights.
-- [ ] The project contains no malware, malicious code, undisclosed confidential information, or personal data.
+- [x] The project contains no malware, malicious code, undisclosed confidential information, or personal data.
 
 ## Devpost submission
 
 - [ ] Devpost registration is complete.
 - [ ] One best-fit track is selected.
-- [ ] The English project description explains the problem, audience, features, and operation.
+- [x] The English project description explains the problem, audience, features, and operation.
 - [ ] A working project URL, demo, or test build is available at no cost to the judges.
-- [ ] Judge testing instructions are complete.
+- [x] Judge testing instructions are complete.
 - [ ] The repository URL is included.
 - [ ] The final commit SHA is recorded privately in `.hackathon/submission.local.md`.
 - [ ] The primary Codex `/feedback` Session ID is recorded privately and entered in the Devpost form.
@@ -74,20 +74,20 @@ Do not record private eligibility documents in this repository.
 
 ## Security and private submission data
 
-- [ ] No API keys, tokens, passwords, Session IDs, private URLs, personal information, or confidential data are committed.
-- [ ] `.hackathon/submission.local.md` remains ignored by Git.
+- [x] No API keys, tokens, passwords, Session IDs, private URLs, personal information, or confidential data are committed.
+- [x] `.hackathon/submission.local.md` remains ignored by Git.
 - [ ] Judge credentials are disposable, least-privileged, and shared outside the public repository.
-- [ ] The final staged diff and repository history have been checked for secrets.
+- [x] The final staged diff and repository history have been checked for secrets.
 
 ## Final verification
 
-- [ ] The final build succeeds from a clean checkout.
-- [ ] Automated tests pass.
-- [ ] Lint and formatting checks pass.
+- [x] The final build succeeds from a clean checkout.
+- [x] Automated tests pass.
+- [x] Lint and formatting checks pass.
 - [ ] The live demo and judge account work in a clean browser session.
 - [ ] Public repository links, video links, and setup commands work without owner-only access.
-- [ ] Submission materials are internally consistent.
-- [ ] The exact Official Rules and official updates have been rechecked on submission day.
+- [x] Submission materials are internally consistent.
+- [x] The exact Official Rules and official updates have been rechecked on submission day.
 - [ ] A receipt or screenshot of the completed Devpost submission is retained privately.
 - [ ] The judged project and test access will remain available through the winner announcement.
 
