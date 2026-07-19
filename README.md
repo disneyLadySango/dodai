@@ -73,6 +73,10 @@ OpenAI documents `gpt-5.6` as the GPT-5.6 Sol alias and supports both the
 Responses API and structured outputs for this model:
 [model documentation](https://developers.openai.com/api/docs/models/gpt-5.6-sol).
 
+A live GPT-5.6 generation was verified on 2026-07-20. The committed semantic
+bundle and both role projections are the resulting reproducible evidence; no
+API key or request identifier is stored in the repository.
+
 ## Exercise the outer loop
 
 A guardrail breach keeps the story and acceptance criterion fixed and proposes

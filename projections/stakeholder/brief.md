@@ -1,14 +1,14 @@
-# dodai Early Access
+# dodai
 
 ## Audience
 
-Product managers and engineers delegating implementation to AI agents
+Product managers and engineers who delegate implementation to AI agents.
 
 ## Promise
 
-**Keep product intent and delivery on the same foundation**
+**One origin. Every projection. Less drift.**
 
-Join the waitlist to explore origin-driven delivery without technical micromanagement.
+Keep product intent authoritative while producing consistent developer and stakeholder projections—without repeatedly translating intent or directing technical methods.
 
 ## Journey
 
@@ -18,4 +18,4 @@ recognized without creating a duplicate.
 
 ## Why this projection exists
 
-This waitlist journey demonstrates that one origin can produce aligned executable behavior, verification, and stakeholder communication.
+A visitor understands dodai’s value, joins the waitlist, and remains registered after restart.

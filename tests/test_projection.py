@@ -64,3 +64,20 @@ def test_refresh_rederives_content_for_the_same_origin(project: Path) -> None:
     engine.project(refresh=True)
 
     assert provider.calls == 2
+
+
+def test_generated_code_keeps_model_copy_within_reviewable_line_length(project: Path) -> None:
+    class LongCopyProvider(CountingProvider):
+        def derive(self, origin_text: str) -> ProjectionContent:
+            content = super().derive(origin_text)
+            return ProjectionContent(
+                **{
+                    **content.__dict__,
+                    "value_proposition": "A long model-derived promise " * 12,
+                }
+            )
+
+    ProjectionEngine(project, LongCopyProvider()).project()
+    generated = (project / "projections/developer/waitlist.py").read_text()
+
+    assert max(len(line) for line in generated.splitlines()) <= 100
