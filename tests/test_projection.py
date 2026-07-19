@@ -30,6 +30,9 @@ def test_one_request_creates_both_role_projections(project: Path) -> None:
     assert (project / "projections/developer/waitlist.py").is_file()
     assert (project / "projections/developer/test_waitlist.py").is_file()
     assert (project / "projections/stakeholder/brief.md").is_file()
+    generated_app = (project / "projections/developer/waitlist.py").read_text()
+    assert "def create_application" in generated_app
+    assert 'if __name__ == "__main__"' in generated_app
     assert provider.calls == 1
 
 

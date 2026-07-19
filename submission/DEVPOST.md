@@ -68,6 +68,16 @@ uv sync --locked --extra dev
 bash scripts/demo.sh
 ```
 
+For the interactive browser experience:
+
+```bash
+bash scripts/demo-web.sh
+```
+
+Then open <http://127.0.0.1:8000>, submit a valid email, repeat it to see
+duplicate handling, and try an invalid value. Registrations remain local and
+survive server restarts.
+
 For the complete verification suite:
 
 ```bash
@@ -80,7 +90,8 @@ uv run dodai --root . rebuild-test
 uv build
 ```
 
-The demo is read-only with respect to the repository and makes no OpenAI API request.
+Both demos make no OpenAI API request. The terminal demo is read-only; the
+browser demo writes only ignored local sample data under `.dodai/demo/`.
 
 ## Submission fields still requiring the owner
 

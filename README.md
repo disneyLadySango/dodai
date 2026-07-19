@@ -66,6 +66,21 @@ projection reports `stable` without an API request. A new origin digest reports
 and tests live under `projections/developer/`, while the shared stakeholder
 explanation lives under `projections/stakeholder/`.
 
+## Run the browser experience
+
+Start the generated waitlist projection with one command:
+
+```bash
+bash scripts/demo-web.sh
+```
+
+Open <http://127.0.0.1:8000>. A visitor can read the GPT-5.6-derived promise,
+join the waitlist, see invalid and duplicate registration feedback, and retain
+the registration across server restarts. Data stays local under `.dodai/demo/`
+and is ignored by Git. Starting the browser demo does not call the OpenAI API.
+
+![Generated dodai waitlist browser experience](docs/assets/browser-demo.png)
+
 ## Derive content with GPT-5.6
 
 Set `OPENAI_API_KEY` in your environment or secret manager. Never add it to this

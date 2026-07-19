@@ -1,5 +1,5 @@
-origin_digest: 670436ce1cc603c081f798ed669bed3ea0e989f52a65dcc5e292091a7c4b4e68
-renderer_version: '1'
+origin_digest: 04a901053b98662fc271c61368deac072c2988dc2063dbe05d5ec73f4b309c74
+renderer_version: '2'
 files:
 - developer/waitlist.py
 - developer/test_waitlist.py
