@@ -4,4 +4,3 @@ variable_model_cost: 0.40
 rebuild_mismatch: true
 representation_revision: 3
 evidence: Rebuild behavior remained inconsistent through three representation revisions.
-

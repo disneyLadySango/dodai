@@ -29,4 +29,3 @@ replace the GPT-5.6 path used for real origin changes.
 - Stable regeneration does not depend on sampling behavior.
 - An origin change requires model access unless a matching approved bundle is
   already available.
-

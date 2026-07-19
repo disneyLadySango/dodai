@@ -4,4 +4,3 @@ variable_model_cost: 0.20
 rebuild_mismatch: false
 representation_revision: 1
 evidence: Complete regeneration exceeded the interactive elapsed-time guardrail.
-

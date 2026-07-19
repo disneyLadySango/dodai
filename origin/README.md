@@ -59,4 +59,3 @@ library, protocol, or internal component.
    story before proposing another approach.
 5. Decisions that merely stabilize regeneration belong in projection-side
    decision records or pins, never in this directory.
-
