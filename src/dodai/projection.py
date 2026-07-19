@@ -97,7 +97,7 @@ class ProjectionEngine:
         self.root = root
         self.provider = provider
 
-    def _source_and_digest(self) -> tuple[str, str]:
+    def _source_and_digest(self) -> tuple[str, str, str, str]:
         origin = load_origin(self.root / "origin")
         report = validate_origin(origin)
         if report.errors or report.warnings:
@@ -111,10 +111,12 @@ class ProjectionEngine:
             )
         source = origin.source_text() + "\n# projection pins\n" + pin_text
         digest = sha256(f"{RENDERER_VERSION}\n{source}".encode()).hexdigest()
-        return source, digest
+        origin_digest = sha256(origin.source_text().encode()).hexdigest()
+        pin_digest = sha256(pin_text.encode()).hexdigest()
+        return source, digest, origin_digest, pin_digest
 
     def project(self, *, refresh: bool = False) -> ProjectionResult:
-        source, digest = self._source_and_digest()
+        source, digest, origin_digest, pin_digest = self._source_and_digest()
         cache_path = self.root / ".dodai" / "cache" / f"{digest}.yaml"
         if cache_path.exists() and not refresh:
             content = ProjectionContent(**yaml.safe_load(cache_path.read_text(encoding="utf-8")))
@@ -126,7 +128,7 @@ class ProjectionEngine:
                 encoding="utf-8",
             )
 
-        rendered = _render(content, digest)
+        rendered = _render(content, digest, origin_digest, pin_digest)
         projection_root = self.root / "projections"
         before = (
             {
@@ -145,7 +147,9 @@ class ProjectionEngine:
         return ProjectionResult(digest=digest, changed=before != after, files=sorted(rendered))
 
 
-def _render(content: ProjectionContent, digest: str) -> dict[str, str]:
+def _render(
+    content: ProjectionContent, digest: str, origin_source_digest: str, pin_digest: str
+) -> dict[str, str]:
     product_name = _python_assignment("PRODUCT_NAME", content.product_name)
     headline = _python_assignment("HEADLINE", content.headline)
     value_proposition = _python_assignment("VALUE_PROPOSITION", content.value_proposition)
@@ -392,6 +396,8 @@ recognized without creating a duplicate.
     manifest = yaml.safe_dump(
         {
             "origin_digest": digest,
+            "origin_source_digest": origin_source_digest,
+            "pin_digest": pin_digest,
             "renderer_version": RENDERER_VERSION,
             "files": [
                 "developer/waitlist.py",
