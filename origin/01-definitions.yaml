@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 1
   name: definitions
-revision: 1
+revision: 2
 terms:
   - id: origin
     definition: The sole authority for product intent and constraints jointly maintained by people and AI agents.
@@ -55,6 +55,27 @@ terms:
   - id: pin
     definition: A projection-side decision retained to prevent needless variation between regenerations.
     allowed_layers: [1, 3]
+  - id: candidate_revision
+    definition: A proposed origin change that has not yet become authoritative.
+    allowed_layers: [1, 3, 4]
+  - id: impact
+    definition: The origin records and projections whose meaning or observable behavior may change because of a candidate revision.
+    allowed_layers: [1, 2, 3, 4]
+  - id: approval
+    definition: A person's explicit decision to make a candidate revision authoritative.
+    allowed_layers: [1, 3, 4]
+  - id: change_history
+    definition: An auditable sequence connecting each approved origin revision to its validation and resulting projections.
+    allowed_layers: [1, 3, 4]
+  - id: proposal
+    definition: A non-authoritative candidate for changing verification in response to observed evidence.
+    allowed_layers: [1, 3, 4]
+  - id: adoption
+    definition: Approval that incorporates a proposal into the authoritative origin.
+    allowed_layers: [1, 3, 4]
+  - id: derivability
+    definition: The ability to trace a projection's meaning and observable behavior to approved origin intent or an explicit projection-side decision.
+    allowed_layers: [1, 3, 4]
 boundary_terms:
   story_solution_vocabulary:
     forbidden_in: [2]

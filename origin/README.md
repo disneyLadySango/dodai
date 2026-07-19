@@ -53,9 +53,20 @@ library, protocol, or internal component.
 ## Change discipline
 
 1. Change the highest layer whose meaning actually changed.
-2. Review every lower-layer reference and regenerate every projection.
-3. If a guardrail is breached, keep layers 2 and 3 fixed and revise layer 4.
-4. If an exit condition is reached, append a losing record to the affected
+2. Treat the change as a candidate revision; the current origin remains
+   authoritative while its lower-layer consequences are reviewed.
+3. Derive or revise layer 4 and obtain explicit human approval before changing
+   product code, tests, documents, or any other projection.
+4. After approval, make the complete origin revision authoritative and
+   regenerate every active projection as one change.
+5. If a guardrail is breached, keep layers 2 and 3 fixed and revise layer 4.
+6. If an exit condition is reached, append a losing record to the affected
    story before proposing another approach.
-5. Decisions that merely stabilize regeneration belong in projection-side
+7. Decisions that merely stabilize regeneration belong in projection-side
    decision records or pins, never in this directory.
+
+An origin-review change deliberately leaves committed projections at the last
+approved origin. A rebuild mismatch is therefore expected until the candidate
+revision is approved and projections are regenerated. Origin lint, reference
+integrity, vocabulary boundaries, and complete layer-3 coverage must pass before
+approval is requested.

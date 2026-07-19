@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 2
   name: user_stories
-revision: 1
+revision: 2
 stories:
   - id: story_authority_drift
     who: A product manager or engineer who delegates implementation to AI agents.
@@ -17,3 +17,12 @@ stories:
     who: A person accountable for a product bet implemented with AI agents.
     pain: When the bet fails, evidence does not reveal whether the problem understanding, chosen approach, or implementation was wrong.
     losing_records: []
+  - id: story_safe_origin_evolution
+    who: A product manager or engineer who delegates implementation to AI agents.
+    pain: Changing product intent without seeing its consequences makes delegation unsafe and forces manual reconciliation after the change.
+  - id: story_retained_product_learning
+    who: A person accountable for repeated product bets implemented with AI agents.
+    pain: Evidence that disproves an approach is separated from later decisions, so people and agents repeat costly bets already known to fail.
+  - id: story_reusable_origin_discipline
+    who: A product manager or engineer applying the same intent discipline across product bets.
+    pain: Applying the discipline to another product bet requires reconstructing its language, outcome standards, and role-specific meaning by hand.
