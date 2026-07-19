@@ -84,7 +84,7 @@ Do not record private eligibility documents in this repository.
 - [x] The final build succeeds from a clean checkout.
 - [x] Automated tests pass.
 - [x] Lint and formatting checks pass.
-- [ ] The live demo and judge account work in a clean browser session.
+- [x] The local live demo works in a clean browser session; no judge account is required.
 - [ ] Public repository links, video links, and setup commands work without owner-only access.
 - [x] Submission materials are internally consistent.
 - [x] The exact Official Rules and official updates have been rechecked on submission day.
