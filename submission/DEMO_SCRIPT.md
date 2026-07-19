@@ -29,17 +29,18 @@ specifications. Run `uv run dodai --root . lint`.
 
 ## 0:50–1:20 — GPT-5.6 and projections
 
-**Screen:** Run `bash scripts/demo-web.sh`, open the local browser experience,
-submit an email, and show the success state. Briefly show the matching
-stakeholder projection. Do not run `--refresh` during recording.
+**Screen:** Run `bash scripts/demo-web.sh`. Show the four-step origin-to-evidence
+lineage, open the generated projection, submit an email, and return to run the
+isolated guardrail scenario. Do not run `--refresh` during recording.
 
 **Narration:**
 
 > GPT-5.6 reads the complete origin and derives one strict structured bundle of
-> shared product meaning. Deterministic renderers turn that bundle into this
-> working browser experience, behavioral tests, and an aligned stakeholder
-> brief. This committed bundle came from one live GPT-5.6 request. The origin
-> digest makes later regeneration stable without spending more model tokens.
+> shared product meaning. This screen reads the actual repository and traces
+> that meaning into a working product, behavioral tests, and an aligned
+> stakeholder brief. This committed bundle came from one live GPT-5.6 request.
+> The origin digest makes later regeneration stable without spending more model
+> tokens.
 
 ## 1:20–1:50 — Rebuild and outer loop
 
