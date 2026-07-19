@@ -1,0 +1,14 @@
+# Local hackathon submission state
+.hackathon/submission.local.md
+.hackathon/private/
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Common local files
+.DS_Store
+*.log
