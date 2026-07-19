@@ -5,7 +5,20 @@ from pathlib import Path
 from shutil import copytree
 from urllib.parse import urlencode
 
+from dodai.projection import ProjectionContent
 from dodai.showcase import create_showcase_application
+
+
+class WorkbenchProvider:
+    def derive(self, origin_text: str) -> ProjectionContent:
+        return ProjectionContent(
+            product_name="dodai",
+            audience="Product teams",
+            headline="Govern every change",
+            value_proposition="Inspect consequences before approval.",
+            call_to_action="Continue",
+            stakeholder_summary="One approved change remains connected across roles.",
+        )
 
 
 def showcase_project(project: Path) -> Path:
@@ -16,8 +29,14 @@ def showcase_project(project: Path) -> Path:
     return project
 
 
-def request(application, path: str = "/", method: str = "GET", email: str = "") -> tuple[str, str]:
-    values = {"email": email} if email else {"scenario": "guardrail"}
+def request(
+    application,
+    path: str = "/",
+    method: str = "GET",
+    email: str = "",
+    form: dict[str, str] | None = None,
+) -> tuple[str, str]:
+    values = form or ({"email": email} if email else {"scenario": "guardrail"})
     payload = urlencode(values).encode() if method == "POST" else b""
     environ = {
         "REQUEST_METHOD": method,
@@ -73,3 +92,83 @@ def test_showcase_serves_the_generated_projection(project: Path) -> None:
     status, page = request(application, "/projection", "POST", "judge@example.com")
     assert status == "201 Created"
     assert "on the list" in page
+
+
+def test_workbench_previews_impact_before_origin_changes(project: Path) -> None:
+    project = showcase_project(project)
+    application = create_showcase_application(project, provider_factory=WorkbenchProvider)
+    story_path = project / "origin/02-user-stories.yaml"
+    before = story_path.read_text()
+    proposed = before.replace(
+        "authoritative meaning is unclear.",
+        "authoritative meaning and the consequences of change are unclear.",
+    ).replace("revision: 2", "revision: 3", 1)
+
+    status, page = request(
+        application,
+        "/candidate",
+        "POST",
+        form={"layer_file": "02-user-stories.yaml", "proposed_text": proposed},
+    )
+
+    assert status == "200 OK"
+    assert "Candidate impact" in page
+    assert "story_authority_drift" in page
+    assert "spec_candidate_impact_is_visible" in page
+    assert story_path.read_text() == before
+
+
+def test_workbench_can_open_each_origin_layer(project: Path) -> None:
+    project = showcase_project(project)
+    application = create_showcase_application(project, provider_factory=WorkbenchProvider)
+
+    status, page = request(application, "/workbench", form={})
+    assert status == "200 OK"
+    assert "?layer=04-test-specifications.yaml" in page
+
+    environ_path = "/workbench"
+    payload = b""
+    response: dict[str, str] = {}
+    environ = {
+        "REQUEST_METHOD": "GET",
+        "PATH_INFO": environ_path,
+        "QUERY_STRING": "layer=04-test-specifications.yaml",
+        "CONTENT_LENGTH": "0",
+        "wsgi.input": BytesIO(payload),
+    }
+
+    def start_response(status, headers):
+        response["status"] = status
+
+    body = b"".join(application(environ, start_response)).decode()
+    assert response["status"] == "200 OK"
+    assert 'value="04-test-specifications.yaml"' in body
+    assert "spec_candidate_impact_is_visible" in body
+
+
+def test_workbench_approval_applies_candidate_and_shows_history(project: Path) -> None:
+    project = showcase_project(project)
+    application = create_showcase_application(project, provider_factory=WorkbenchProvider)
+    original = (project / "origin/02-user-stories.yaml").read_text()
+    proposed = original.replace("revision: 2", "revision: 3", 1).replace(
+        "authoritative meaning is unclear.", "approved consequences are unclear."
+    )
+    _, preview = request(
+        application,
+        "/candidate",
+        "POST",
+        form={"layer_file": "02-user-stories.yaml", "proposed_text": proposed},
+    )
+    candidate_id = preview.split('name="candidate_id" value="', 1)[1].split('"', 1)[0]
+
+    status, page = request(
+        application,
+        "/candidate/approve",
+        "POST",
+        form={"candidate_id": candidate_id},
+    )
+
+    assert status == "200 OK"
+    assert "Revision approved" in page
+    assert "Change history" in page
+    assert "approved consequences" in (project / "origin/02-user-stories.yaml").read_text()
