@@ -66,18 +66,26 @@ projection reports `stable` without an API request. A new origin digest reports
 and tests live under `projections/developer/`, while the shared stakeholder
 explanation lives under `projections/stakeholder/`.
 
-## Run the browser experience
+## Run the browser showcase
 
-Start the generated waitlist projection with one command:
+Start the judge-facing showcase with one command:
 
 ```bash
 bash scripts/demo-web.sh
 ```
 
-Open <http://127.0.0.1:8000>. A visitor can read the GPT-5.6-derived promise,
-join the waitlist, see invalid and duplicate registration feedback, and retain
-the registration across server restarts. Data stays local under `.dodai/demo/`
-and is ignored by Git. Starting the browser demo does not call the OpenAI API.
+Open <http://127.0.0.1:8000>. The browser explains the live repository-backed
+lineage from four origin layers through the approved GPT-5.6 semantic bundle to
+developer and stakeholder projections. From the same screen, a judge can open
+the generated waitlist or run an isolated guardrail-breach scenario and inspect
+the proposed verification. The scenario never changes the checkout.
+
+![dodai judge-facing origin-to-evidence showcase](docs/assets/showcase.png)
+
+The generated waitlist supports valid, duplicate, and invalid registration
+feedback and retains registrations across server restarts. Data stays local
+under `.dodai/demo/` and is ignored by Git. The showcase does not call the
+OpenAI API.
 
 ![Generated dodai waitlist browser experience](docs/assets/browser-demo.png)
 

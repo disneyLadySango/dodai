@@ -68,15 +68,16 @@ uv sync --locked --extra dev
 bash scripts/demo.sh
 ```
 
-For the interactive browser experience:
+For the interactive browser showcase:
 
 ```bash
 bash scripts/demo-web.sh
 ```
 
-Then open <http://127.0.0.1:8000>, submit a valid email, repeat it to see
-duplicate handling, and try an invalid value. Registrations remain local and
-survive server restarts.
+Then open <http://127.0.0.1:8000>. The first screen explains the repository-backed
+origin-to-projection lineage. Run the isolated guardrail scenario, then open the
+generated product and submit a valid email. Repeat it to see duplicate handling,
+and try an invalid value. Registrations remain local and survive server restarts.
 
 For the complete verification suite:
 
@@ -90,8 +91,9 @@ uv run dodai --root . rebuild-test
 uv build
 ```
 
-Both demos make no OpenAI API request. The terminal demo is read-only; the
-browser demo writes only ignored local sample data under `.dodai/demo/`.
+Both demos make no OpenAI API request. The terminal demo and guardrail scenario
+are read-only with respect to the checkout; waitlist registration writes only
+ignored local sample data under `.dodai/demo/`.
 
 ## Submission fields still requiring the owner
 
