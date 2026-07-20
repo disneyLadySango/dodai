@@ -19,12 +19,46 @@ from dodai.evolution import (
     candidate_from_proposal,
     prepare_candidate,
 )
+from dodai.localization import japanese_catalog, select_language, translated_record
 from dodai.outer_loop import evaluate_telemetry
 from dodai.projection import ContentProvider, OpenAIContentProvider
 
 StartResponse = Callable[[str, list[tuple[str, str]]], Any]
 Application = Callable[[dict[str, Any], StartResponse], Iterable[bytes]]
 ProviderFactory = Callable[[], ContentProvider]
+
+
+def _localize(html: str, language: str) -> str:
+    if language == "en":
+        return html
+    for english, japanese in japanese_catalog()["ui"].items():
+        html = html.replace(str(english), str(japanese))
+    return html.replace('<html lang="en">', '<html lang="ja">')
+
+
+def _origin_audit(root: Path, language: str) -> str:
+    cards = []
+    collections = ("terms", "stories", "criteria", "specifications")
+    for path in sorted((root / "origin").glob("0*.yaml")):
+        layer = _mapping(path)
+        collection = next(name for name in collections if name in layer)
+        for record in layer[collection]:
+            record_id = str(record["id"])
+            if language == "ja":
+                meaning = translated_record(record_id)
+            else:
+                meaning = str(
+                    record.get("definition")
+                    or record.get("pain")
+                    or record.get("statement")
+                    or record.get("then")
+                )
+            cards.append(
+                f'<article data-origin-id="{escape(record_id)}"><code>{escape(record_id)}</code>'
+                f"<p>{escape(meaning)}</p></article>"
+            )
+    title = "意味の監査" if language == "ja" else "Meaning audit"
+    return f'<section class="audit"><h2>{title}</h2>{"".join(cards)}</section>'
 
 
 def _mapping(path: Path) -> dict[str, Any]:
@@ -111,13 +145,29 @@ def _serve_projection(
     return [body]
 
 
-def _render_showcase(root: Path, outcome: tuple[str, str, str | None] | None = None) -> str:
+def _render_showcase(
+    root: Path,
+    outcome: tuple[str, str, str | None] | None = None,
+    *,
+    language: str = "ja",
+) -> str:
     manifest = _mapping(root / "projections/manifest.yaml")
     cache_path = root / ".dodai/cache" / f"{manifest['origin_digest']}.yaml"
     semantic = _mapping(cache_path)
     origin_layers = sorted((root / "origin").glob("0*.yaml"))
     projection_files = manifest.get("files", [])
     developer_files = [path for path in projection_files if str(path).startswith("developer/")]
+    introduction = (
+        japanese_catalog()["content"]["introduction"]
+        if language == "ja"
+        else "One auditable origin becomes executable software, verification, and stakeholder "
+        "meaning—without prescribing technical How."
+    )
+    stakeholder_summary = (
+        japanese_catalog()["content"]["stakeholder_summary"]
+        if language == "ja"
+        else str(semantic["stakeholder_summary"])
+    )
     result = ""
     if outcome:
         adoption = ""
@@ -125,6 +175,7 @@ def _render_showcase(root: Path, outcome: tuple[str, str, str | None] | None = N
             adoption = f"""
             <form method="post" action="/candidate/approve">
               <input type="hidden" name="candidate_id" value="{outcome[2]}">
+              <input type="hidden" name="lang" value="{language}">
               <button type="submit">Adopt as layer-four verification →</button>
             </form>"""
         result = f"""
@@ -137,7 +188,9 @@ def _render_showcase(root: Path, outcome: tuple[str, str, str | None] | None = N
             The authoritative origin stayed unchanged.</p>
           {adoption}
         </section>"""
-    return f"""<!doctype html>
+    switch_language = "en" if language == "ja" else "ja"
+    switch_label = "English" if language == "ja" else "日本語"
+    html = f"""<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -200,14 +253,14 @@ def _render_showcase(root: Path, outcome: tuple[str, str, str | None] | None = N
 </head>
 <body>
   <header><span class="brand">dodai / 土台</span>
-    <span><a href="/workbench">Origin workbench</a> ·
+    <span><a href="/workbench?lang={language}">Origin workbench</a> ·
+      <a class="language" href="/?lang={switch_language}">{switch_label}</a> ·
       <span class="verified">Repository aligned</span></span></header>
   <main>
     <section class="hero">
       <div><span class="kicker">Origin-driven development</span>
         <h1>From intent<br>to evidence.</h1>
-        <p class="intro">One auditable origin becomes executable software, verification,
-          and stakeholder meaning—without prescribing technical How.</p></div>
+        <p class="intro">{escape(str(introduction))}</p></div>
       <aside class="proof"><span>Current origin</span>
         <strong>{escape(str(manifest["origin_digest"]))[:12]}</strong>
         <span>Renderer v{escape(str(manifest["renderer_version"]))}
@@ -230,7 +283,7 @@ def _render_showcase(root: Path, outcome: tuple[str, str, str | None] | None = N
           <span class="arrow">→</span></span></article>
       <article class="card"><span class="step">04 / Same meaning</span>
         <h2>Stakeholder projection</h2>
-        <p>{escape(str(semantic["stakeholder_summary"]))}</p>
+        <p>{escape(str(stakeholder_summary))}</p>
         <span class="metric">1 aligned brief ✓</span></article>
     </section>
     <section class="actions">
@@ -240,6 +293,7 @@ def _render_showcase(root: Path, outcome: tuple[str, str, str | None] | None = N
       <article class="action"><h2>Break a guardrail</h2>
         <p>Feed slow regeneration telemetry into the outer learning loop.</p>
         <form method="post" action="/guardrail#result">
+          <input type="hidden" name="lang" value="{language}">
           <button type="submit">Run isolated scenario →</button></form></article>
     </section>
     {result}
@@ -248,6 +302,7 @@ def _render_showcase(root: Path, outcome: tuple[str, str, str | None] | None = N
     <span>No API request · Local only</span></footer>
 </body>
 </html>"""
+    return _localize(html, language)
 
 
 def _read_form(environ: dict[str, Any]) -> dict[str, str]:
@@ -263,6 +318,7 @@ def _render_workbench(
     layer_file: str = "02-user-stories.yaml",
     message: str = "",
     history_path: Path | None = None,
+    language: str = "ja",
 ) -> str:
     layer_file = candidate.layer_file if candidate else layer_file
     source = candidate.proposed_text if candidate else (root / "origin" / layer_file).read_text()
@@ -273,7 +329,8 @@ def _render_workbench(
         "04-test-specifications.yaml": "04 · Test specifications",
     }
     layer_links = "".join(
-        f'<a href="/workbench?layer={name}">{label}</a>' for name, label in layer_labels.items()
+        f'<a href="/workbench?layer={name}&amp;lang={language}">{label}</a>'
+        for name, label in layer_labels.items()
     )
     impact = ""
     if candidate:
@@ -290,6 +347,7 @@ def _render_workbench(
             controls = f"""
             <form method="post" action="/candidate/approve">
               <input type="hidden" name="candidate_id" value="{candidate.candidate_id}">
+              <input type="hidden" name="lang" value="{language}">
               <button type="submit">Approve and regenerate →</button>
             </form>"""
         issue_section = (
@@ -308,7 +366,22 @@ def _render_workbench(
     if history_path:
         history = f"""<section class="history"><h2>Change history</h2>
           <p>{escape(history_path.relative_to(root).as_posix())}</p></section>"""
-    return f"""<!doctype html>
+    switch_language = "en" if language == "ja" else "ja"
+    switch_label = "English" if language == "ja" else "日本語"
+    audit = _origin_audit(root, language)
+    editor = f"""<section class="editor"><aside class="layers"><strong>Four origin layers</strong>
+{layer_links}</aside>
+<form class="panel" method="post" action="/candidate">
+<input type="hidden" name="layer_file" value="{escape(layer_file)}">
+<input type="hidden" name="lang" value="{language}">
+<textarea name="proposed_text" aria-label="Candidate origin text">{escape(source)}</textarea>
+<p><button type="submit">Preview complete impact →</button></p></form></section>"""
+    work_area = (
+        f"{audit}<details><summary>Edit authoritative source</summary>{editor}</details>"
+        if language == "ja"
+        else f"{editor}{audit}"
+    )
+    html = f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
 <title>dodai — Origin workbench</title><style>
 :root {{ --ink:#14231d; --paper:#f5f1e7; --lime:#c9ff5b; }} * {{ box-sizing:border-box; }}
@@ -331,21 +404,21 @@ button {{ border:0; background:var(--lime); color:var(--ink); padding:15px 18px;
 .impact {{ margin-top:24px; display:grid; grid-template-columns:1fr 1fr; gap:20px; }}
 .impact h2, .impact form, .issues {{ grid-column:1/-1; }}
 .message {{ background:var(--lime); padding:16px; }}
+.audit {{ margin-top:24px; display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }}
+.audit h2 {{ grid-column:1/-1; }} .audit article {{ border-top:1px solid #aaa; padding:12px 0; }}
+.audit p {{ margin:.45rem 0 0; line-height:1.55; }}
+details {{ margin-top:28px; }} summary {{ cursor:pointer; font-weight:850; padding:16px 0; }}
 @media(max-width:760px) {{ .editor,.impact {{ grid-template-columns:1fr; }}
-  textarea {{ min-height:420px; }} }}
+  textarea {{ min-height:420px; }} .audit {{ grid-template-columns:1fr; }} }}
 </style></head><body><main><nav><strong>dodai / origin workbench</strong>
-<a href="/">Showcase</a></nav>
+<span><a href="/?lang={language}">Showcase</a> ·
+<a href="/workbench?lang={switch_language}">{switch_label}</a></span></nav>
 <h1>Change intent.<br>See consequences.</h1>
 <p class="lede">The current origin remains authoritative until a complete candidate is valid
 and explicitly approved. Approval regenerates every active projection as one governed change.</p>
 {f'<p class="message">{escape(message)}</p>' if message else ""}
-<section class="editor"><aside class="layers"><strong>Four origin layers</strong>
-{layer_links}</aside>
-<form class="panel" method="post" action="/candidate">
-<input type="hidden" name="layer_file" value="{escape(layer_file)}">
-<textarea name="proposed_text" aria-label="Candidate origin text">{escape(source)}</textarea>
-<p><button type="submit">Preview complete impact →</button></p></form></section>
-{impact}{history}</main></body></html>"""
+{work_area}{impact}{history}</main></body></html>"""
+    return _localize(html, language)
 
 
 def create_showcase_application(
@@ -356,22 +429,25 @@ def create_showcase_application(
 
     def application(environ: dict[str, Any], start_response: StartResponse) -> Iterable[bytes]:
         path = str(environ.get("PATH_INFO", "/"))
+        query = parse_qs(str(environ.get("QUERY_STRING", "")))
+        language = select_language(query.get("lang", [None])[0])
         if path == "/projection":
             return _serve_projection(projection, environ, start_response)
         workbench = None
         workbench_status = "200 OK"
         if path == "/workbench" and environ.get("REQUEST_METHOD", "GET").upper() == "GET":
-            query = parse_qs(str(environ.get("QUERY_STRING", "")))
             selected_layer = query.get("layer", ["02-user-stories.yaml"])[0]
             if selected_layer not in LAYER_COLLECTIONS:
                 selected_layer = "02-user-stories.yaml"
-            workbench = _render_workbench(root, layer_file=selected_layer)
+            workbench = _render_workbench(root, layer_file=selected_layer, language=language)
         elif path == "/candidate" and environ.get("REQUEST_METHOD") == "POST":
             form = _read_form(environ)
+            language = select_language(form.get("lang"))
             candidate = prepare_candidate(root, form["layer_file"], form["proposed_text"])
-            workbench = _render_workbench(root, candidate)
+            workbench = _render_workbench(root, candidate, language=language)
         elif path == "/candidate/approve" and environ.get("REQUEST_METHOD") == "POST":
             form = _read_form(environ)
+            language = select_language(form.get("lang"))
             try:
                 result = approve_candidate(
                     root, form["candidate_id"], provider_factory(), approved_by="local human"
@@ -379,13 +455,16 @@ def create_showcase_application(
             except Exception:
                 workbench_status = "422 Unprocessable Entity"
                 workbench = _render_workbench(
-                    root, message="Approval failed; the authoritative origin is unchanged."
+                    root,
+                    message="Approval failed; the authoritative origin is unchanged.",
+                    language=language,
                 )
             else:
                 workbench = _render_workbench(
                     root,
                     message="Revision approved and every projection regenerated.",
                     history_path=result.history_path,
+                    language=language,
                 )
         if workbench is not None:
             body = workbench.encode("utf-8")
@@ -396,12 +475,14 @@ def create_showcase_application(
             return [body]
         outcome = None
         if path == "/guardrail" and environ.get("REQUEST_METHOD", "GET").upper() == "POST":
+            form = _read_form(environ)
+            language = select_language(form.get("lang"))
             outcome = _guardrail_demonstration(root)
         elif path != "/":
             body = b"Not found"
             start_response("404 Not Found", [("Content-Type", "text/plain")])
             return [body]
-        body = _render_showcase(root, outcome).encode("utf-8")
+        body = _render_showcase(root, outcome, language=language).encode("utf-8")
         start_response(
             "200 OK",
             [("Content-Type", "text/html; charset=utf-8"), ("Content-Length", str(len(body)))],

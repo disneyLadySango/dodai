@@ -1,0 +1,132 @@
+language: ja
+name: 日本語
+content:
+  introduction: 監査可能な1つの原点から、技術的なHowを指定せず、動く成果物・検証・関係者向けの意味を導出します。
+  stakeholder_summary: プロダクトマネージャーとエンジニアは、変更の影響を承認前に確認し、1つの正本から安定した開発者向け射影と関係者向け射影を得られます。
+ui:
+  "dodai / origin workbench": "dodai / 原点ワークベンチ"
+  "01 · Definitions": "01 · 定義層"
+  "02 · User stories": "02 · ユーザーストーリー"
+  "03 · Acceptance criteria": "03 · 成果基準"
+  "04 · Test specifications": "04 · テスト仕様"
+  "From intent to evidence": "意図から証拠へ"
+  "Origin workbench": "原点ワークベンチ"
+  "Repository aligned": "リポジトリ整合済み"
+  "Origin-driven development": "原点駆動開発"
+  "From intent<br>to evidence.": "意図から<br>証拠へ。"
+  "One auditable origin becomes executable software, verification, and stakeholder meaning—without prescribing technical How.": "監査可能な1つの原点から、技術的なHowを指定せず、動く成果物・検証・関係者向けの意味を導出します。"
+  "Current origin": "現在の原点"
+  "stable regeneration": "安定した再射影"
+  "Projection lineage": "射影の系譜"
+  "Human intent": "人間の意図"
+  "4 origin layers": "原点の4層"
+  "Definitions, solution-free stories, falsifiable outcomes,\n          and implementation-independent tests.": "定義、Howを含まないストーリー、反証可能な成果、実装に依存しないテスト仕様。"
+  "audited files": "監査対象"
+  "Model judgment": "モデルの判断"
+  "Derives shared product meaning once. The approved bundle is addressed\n          by the origin digest.": "共有するプロダクトの意味を一度導出し、承認済みの束を原点ダイジェストで識別します。"
+  "cached bundle": "キャッシュ済みの意味束"
+  "Deterministic": "決定的な導出"
+  "Developer projection": "開発者向け射影"
+  "Executable waitlist behavior and tests generated from the same approved meaning.": "同じ承認済みの意味から、動く待機リストとテストを生成します。"
+  "executable files": "実行可能ファイル"
+  "Same meaning": "同じ意味"
+  "Stakeholder projection": "関係者向け射影"
+  "aligned brief": "整合した説明"
+  "Touch the projection": "射影を触る"
+  "Open the generated waitlist, register, and observe persistent behavior.": "生成された待機リストを開き、登録して、再起動後も残る振る舞いを確認します。"
+  "Open generated product →": "生成プロダクトを開く →"
+  "Break a guardrail": "ガードレールを破る"
+  "Feed slow regeneration telemetry into the outer learning loop.": "遅い再生成のテレメトリを外側の学習ループへ入力します。"
+  "Run isolated scenario →": "隔離シナリオを実行 →"
+  "Manage agents by outcomes, not methods.": "方法ではなく成果でエージェントを管理する。"
+  "No API request · Local only": "API呼び出しなし・ローカルのみ"
+  "Observed telemetry": "観測テレメトリ"
+  "Dodai response": "Dodaiの応答"
+  "The demonstration ran in an isolated copy.\n            The authoritative origin stayed unchanged.": "デモは隔離コピーで実行され、正本の原点は変更されていません。"
+  "Adopt as layer-four verification →": "第4層の検証として採用 →"
+  "Change intent.<br>See consequences.": "意図を変える。<br>影響を見る。"
+  "The current origin remains authoritative until a complete candidate is valid\nand explicitly approved. Approval regenerates every active projection as one governed change.": "完全な候補が有効となり明示承認されるまで、現在の原点が正本です。承認すると、管理された1変更として全射影を再生成します。"
+  "Four origin layers": "原点の4層"
+  "Edit authoritative source": "正本の原文を編集する"
+  "Preview complete impact →": "影響全体をプレビュー →"
+  "Candidate impact": "候補の影響"
+  "Origin records": "原点レコード"
+  "Active projections": "有効な射影"
+  "Cannot approve": "承認できません"
+  "Approve and regenerate →": "承認して再射影 →"
+  "Change history": "変更履歴"
+  "Showcase": "ショーケース"
+  "Revision approved and every projection regenerated.": "変更を承認し、すべての射影を再生成しました。"
+  "Approval failed; the authoritative origin is unchanged.": "承認に失敗しました。正本の原点は変更されていません。"
+records:
+  origin: 人とAIが共同管理する、意図と制約の唯一の正本。
+  definition: 下位層へ意味と語彙を供給する、承認済みの定義。
+  user_story: 解決方法から独立した、利用者と長期的な痛みの記録。
+  pain: 利用者が経験する、コストや制約を生む状態。
+  acceptance_criterion: 現在の賭けを判定する、反証可能なビジネス成果。
+  guardrail: 破った場合に別の検証方法へ切り替える境界。
+  exit_condition: 現在の賭けを終了し、敗戦記録を必要とする証拠。
+  test_specification: ACを観測可能な振る舞いで検証する、実装非依存の記述。
+  projection: 原点から導出され、破棄・再生成できるロール別の表現。
+  drift: 原点と射影の意味または振る舞いの不一致。
+  regeneration: 現在の原点から全射影を導出すること。
+  stable_projection: 原点とピンが同じなら観測内容が変わらない射影。
+  telemetry: ガードレールと撤退条件を評価するプロダクト成果の観測値。
+  guardrail_breach: 有効なガードレール範囲を外れたテレメトリ。
+  losing_record: 再試行すべきでない否定済みアプローチと証拠の記録。
+  rebuild_test: 既存射影と全削除後に再生成した射影の比較。
+  pin: 再生成の不要な揺れを防ぐ、射影側に保持された判断。
+  candidate_revision: まだ正本ではない、原点変更の提案。
+  impact: 候補変更で意味や振る舞いが変わり得る原点レコードと射影。
+  approval: 候補変更を正本にする、人間の明示的判断。
+  change_history: 承認済み原点変更を検証と射影へ結ぶ監査可能な履歴。
+  proposal: 観測された証拠に応じて検証を変える、未承認の候補。
+  adoption: 提案を正本へ取り込む承認。
+  derivability: 射影の意味と振る舞いを原点または明示的ピンへ追跡できる性質。
+  presentation_language: 原点・証拠・判断を監査するために選ぶ人間の言語。
+  semantic_equivalence: 同じ正本の異なる表現で、意味・影響・判断が一致すること。
+  story_authority_drift: 意図・実行・検証・説明がずれ、何が正しい意味か分からなくなる。
+  story_method_micromanagement: 技術的方法の指示に時間を奪われ、ビジネス課題へ集中できない。
+  story_repeated_translation: 同じ意図を対象者ごとに翻訳し直し、手間と意味の不一致が生じる。
+  story_failure_diagnosis: 失敗時に、課題理解・How・実装のどこが誤りか切り分けられない。
+  story_safe_origin_evolution: 影響を見ずに意図を変えると、安全に委任できず手作業の調整が必要になる。
+  story_retained_product_learning: 否定された方法の証拠が後の判断から離れ、同じ失敗を繰り返す。
+  story_reusable_origin_discipline: 別の賭けへ適用するたびに、言語・成果基準・説明を作り直す必要がある。
+  story_language_barrier: 不慣れな言語だけの表現では直接監査できず、非公式な翻訳へ判断を依存する。
+  ac_complete_regeneration: 原点への1変更を、1回の操作で全射影へ反映できる。
+  ac_stable_regeneration: 原点が同じなら、再射影しても観測可能な差がない。
+  ac_role_projections: 同じ原点から、実行可能な開発者向け射影と人間可読な関係者向け射影が得られる。
+  ac_story_vocabulary_warning: ストーリーへ混入したソリューション語彙を機械的に検出する。
+  ac_outer_loop: ガードレール違反では検証変更を提案し、撤退条件では敗戦記録を追記する。
+  ac_rebuild_comparison: 全射影を捨てて再生成し、以前との振る舞いの差を観測できる。
+  ac_change_impact_visible: 承認前に影響を受ける全レコードと射影を特定できる。
+  ac_change_preview_and_approval: 候補の全影響を比較し、部分変更なしに承認または却下できる。
+  ac_approved_change_history: 承認変更を前後の意味・検証・射影・承認者へ結び付けて残す。
+  ac_guardrail_proposal_adoption: ストーリーとACを変えずに、ガードレール由来の検証提案を採用できる。
+  ac_losing_record_guides_proposals: 過去に否定された方法の再提案を検出し除外する。
+  ac_pin_change_attribution: 意図変更と射影安定化判断を区別し、差分原因を特定できる。
+  ac_projection_derivability_gate: 原点またはピンへ追跡できない射影変更を拒否する。
+  ac_reusable_origin_discipline: 異なる業務語彙の別プロダクトにも、Dodai固有変更なしで適用できる。
+  ac_supported_language_audit: 対応言語だけで原点・影響・重要操作を完全に監査できる。
+  ac_presentation_language_equivalence: 表示言語を変えても、意味・影響・判断・射影IDは変わらない。
+  guardrail_regeneration_budget: 全射影の再生成を対話的に使える時間と費用へ収める。
+  exit_origin_representation: 表現改訂を3回続けてもリビルド不一致なら、現在の表現方式を撤退する。
+  spec_origin_change_reaches_all_projections: 原点の1文を変え1回再生成すると、全射影へ反映されることを検証する。
+  spec_unchanged_origin_is_stable: 同じ承認条件で再生成し、以前との差がないことを検証する。
+  spec_two_roles_share_one_origin: 1つの原点から、動く開発者向け成果と一致する関係者向け説明が得られることを検証する。
+  spec_solution_language_is_reported: ストーリーへ禁止語彙を入れ、違反箇所が報告されることを検証する。
+  spec_guardrail_breach_revises_verification: 撤退条件未到達のガードレール違反で、ストーリーとACを固定した検証変更が提案されることを検証する。
+  spec_exit_condition_records_loss: 撤退条件到達時に、否定された方法と証拠がストーリーへ追記されることを検証する。
+  spec_rebuild_exposes_leaked_decisions: 全射影を再構築し、導出不能な差分が報告されることを検証する。
+  spec_candidate_impact_is_visible: 承認前に、影響あり・なしの原点レコードと射影が区別されることを検証する。
+  spec_candidate_is_atomic: 承認では全変更が一度に正本となり、却下では何も変わらないことを検証する。
+  spec_approved_change_is_traceable: 承認変更の前後・検証・射影ID・承認が一続きで確認できることを検証する。
+  spec_guardrail_proposal_can_be_adopted: 提案採用後もストーリーとACが同じで、原点全体が有効なことを検証する。
+  spec_losing_record_blocks_repetition: 敗戦記録と同じ方法の候補が、証拠付きで拒否されることを検証する。
+  spec_pin_and_origin_changes_are_attributed: 射影差分が原点変更またはピン変更へ正しく帰属することを検証する。
+  spec_underivable_projection_is_rejected: 根拠のない射影変更が特定され、採用射影を置き換えないことを検証する。
+  spec_second_product_uses_same_discipline: 異なる2つの原点を同じ規律で検証・変更・射影できることを検証する。
+  spec_supported_language_is_complete: 対応言語だけで4層・変更候補・影響・承認を理解できることを検証する。
+  spec_presentation_languages_are_equivalent: 2言語の同じ操作が、同じ影響・検証・判断・原点ID・射影IDになることを検証する。
+  spec_regeneration_stays_within_budget: 再生成の時間と変動費が有効なしきい値以内であることを検証する。
+  spec_persistent_mismatch_ends_bet: 不一致改訂数がしきい値へ達したら、別方式の前に現在の賭けを終了することを検証する。

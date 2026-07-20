@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 3
   name: acceptance_criteria
-revision: 2
+revision: 3
 criteria:
   - id: ac_complete_regeneration
     kind: outcome
@@ -60,6 +60,14 @@ criteria:
     kind: outcome
     supports: [story_reusable_origin_discipline, story_repeated_translation]
     statement: The same origin discipline can validate, evolve, and project a second product intent with different business language without product-specific changes to dodai.
+  - id: ac_supported_language_audit
+    kind: outcome
+    supports: [story_language_barrier, story_safe_origin_evolution]
+    statement: A person can inspect the complete origin, its consequences, and consequential actions in a supported presentation language without relying on another language.
+  - id: ac_presentation_language_equivalence
+    kind: outcome
+    supports: [story_language_barrier, story_authority_drift]
+    statement: Changing the presentation language changes no authoritative meaning, identified consequence, decision result, or projection identity.
   - id: guardrail_regeneration_budget
     kind: guardrail
     supports: [ac_complete_regeneration]

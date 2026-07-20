@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 2
   name: user_stories
-revision: 2
+revision: 3
 stories:
   - id: story_authority_drift
     who: A product manager or engineer who delegates implementation to AI agents.
@@ -26,3 +26,6 @@ stories:
   - id: story_reusable_origin_discipline
     who: A product manager or engineer applying the same intent discipline across product bets.
     pain: Applying the discipline to another product bet requires reconstructing its language, outcome standards, and role-specific meaning by hand.
+  - id: story_language_barrier
+    who: A product manager or engineer who audits product intent and delegated work in their working language.
+    pain: Meaning presented only in an unfamiliar language prevents direct inspection and makes consequential decisions depend on an informal translation.

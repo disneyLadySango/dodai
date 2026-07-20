@@ -42,12 +42,14 @@ def request(
     method: str = "GET",
     email: str = "",
     form: dict[str, str] | None = None,
+    query: str = "",
 ) -> tuple[str, str]:
     values = form or ({"email": email} if email else {"scenario": "guardrail"})
     payload = urlencode(values).encode() if method == "POST" else b""
     environ = {
         "REQUEST_METHOD": method,
         "PATH_INFO": path,
+        "QUERY_STRING": query,
         "CONTENT_LENGTH": str(len(payload)),
         "wsgi.input": BytesIO(payload),
     }
@@ -60,10 +62,80 @@ def request(
     return response["status"], body
 
 
+def test_showcase_defaults_to_japanese_and_can_switch_to_english(project: Path) -> None:
+    application = create_showcase_application(showcase_project(project))
+
+    status, japanese = request(application)
+    english_status, english = request(application, query="lang=en")
+
+    assert status == english_status == "200 OK"
+    assert '<html lang="ja">' in japanese
+    assert "意図から証拠へ" in japanese
+    assert "監査可能な1つの原点" in japanese
+    assert "One auditable origin becomes" not in japanese
+    assert "プロダクトマネージャーとエンジニア" in japanese
+    assert 'href="/?lang=en"' in japanese
+    assert '<html lang="en">' in english
+    assert "From intent to evidence" in english
+    assert 'href="/?lang=ja"' in english
+
+
+def test_workbench_presents_every_origin_record_in_japanese(project: Path) -> None:
+    project = showcase_project(project)
+    application = create_showcase_application(project, provider_factory=WorkbenchProvider)
+
+    status, page = request(application, "/workbench")
+    expected_ids = []
+    for path in sorted((project / "origin").glob("0*.yaml")):
+        layer = yaml.safe_load(path.read_text())
+        collection = next(
+            key for key in ("terms", "stories", "criteria", "specifications") if key in layer
+        )
+        expected_ids.extend(record["id"] for record in layer[collection])
+
+    assert status == "200 OK"
+    assert '<html lang="ja">' in page
+    assert "原点ワークベンチ" in page
+    assert "意味の監査" in page
+    assert page.index("意味の監査") < page.index("Candidate origin text")
+    assert "正本の原文を編集する" in page
+    for record_id in expected_ids:
+        assert f'data-origin-id="{record_id}"' in page
+
+
+def test_language_choice_does_not_change_candidate_consequences(project: Path) -> None:
+    project = showcase_project(project)
+    application = create_showcase_application(project, provider_factory=WorkbenchProvider)
+    original = (project / "origin/02-user-stories.yaml").read_text()
+    proposed = original.replace("revision: 3", "revision: 4", 1).replace(
+        "authoritative meaning is unclear.", "authoritative consequences are unclear."
+    )
+
+    _, japanese = request(
+        application,
+        "/candidate",
+        "POST",
+        form={"layer_file": "02-user-stories.yaml", "proposed_text": proposed, "lang": "ja"},
+    )
+    _, english = request(
+        application,
+        "/candidate",
+        "POST",
+        form={"layer_file": "02-user-stories.yaml", "proposed_text": proposed, "lang": "en"},
+    )
+
+    japanese_id = japanese.split('name="candidate_id" value="', 1)[1].split('"', 1)[0]
+    english_id = english.split('name="candidate_id" value="', 1)[1].split('"', 1)[0]
+    assert japanese_id == english_id
+    assert "story_authority_drift" in japanese and "story_authority_drift" in english
+    assert "spec_candidate_impact_is_visible" in japanese
+    assert "spec_candidate_impact_is_visible" in english
+
+
 def test_showcase_explains_the_repository_backed_lineage(project: Path) -> None:
     application = create_showcase_application(showcase_project(project))
 
-    status, page = request(application)
+    status, page = request(application, query="lang=en")
 
     assert status == "200 OK"
     assert "From intent to evidence" in page
@@ -78,7 +150,7 @@ def test_showcase_demonstrates_guardrail_without_mutating_origin(project: Path) 
     story_path = project / "origin/02-user-stories.yaml"
     before = story_path.read_bytes()
 
-    status, page = request(application, "/guardrail", "POST")
+    status, page = request(application, "/guardrail", "POST", form={"lang": "en"})
 
     assert status == "200 OK"
     assert "Guardrail breached" in page
@@ -121,7 +193,7 @@ def test_workbench_previews_impact_before_origin_changes(project: Path) -> None:
         application,
         "/candidate",
         "POST",
-        form={"layer_file": "02-user-stories.yaml", "proposed_text": proposed},
+        form={"layer_file": "02-user-stories.yaml", "proposed_text": proposed, "lang": "en"},
     )
 
     assert status == "200 OK"
@@ -135,7 +207,7 @@ def test_workbench_can_open_each_origin_layer(project: Path) -> None:
     project = showcase_project(project)
     application = create_showcase_application(project, provider_factory=WorkbenchProvider)
 
-    status, page = request(application, "/workbench", form={})
+    status, page = request(application, "/workbench", form={}, query="lang=en")
     assert status == "200 OK"
     assert "?layer=04-test-specifications.yaml" in page
 
@@ -170,7 +242,7 @@ def test_workbench_approval_applies_candidate_and_shows_history(project: Path) -
         application,
         "/candidate",
         "POST",
-        form={"layer_file": "02-user-stories.yaml", "proposed_text": proposed},
+        form={"layer_file": "02-user-stories.yaml", "proposed_text": proposed, "lang": "en"},
     )
     candidate_id = preview.split('name="candidate_id" value="', 1)[1].split('"', 1)[0]
 
@@ -178,7 +250,7 @@ def test_workbench_approval_applies_candidate_and_shows_history(project: Path) -
         application,
         "/candidate/approve",
         "POST",
-        form={"candidate_id": candidate_id},
+        form={"candidate_id": candidate_id, "lang": "en"},
     )
 
     assert status == "200 OK"
@@ -201,7 +273,7 @@ def test_workbench_failed_approval_is_safe_and_does_not_expose_provider_detail(
         application,
         "/candidate",
         "POST",
-        form={"layer_file": "02-user-stories.yaml", "proposed_text": proposed},
+        form={"layer_file": "02-user-stories.yaml", "proposed_text": proposed, "lang": "en"},
     )
     candidate_id = preview.split('name="candidate_id" value="', 1)[1].split('"', 1)[0]
 
@@ -209,7 +281,7 @@ def test_workbench_failed_approval_is_safe_and_does_not_expose_provider_detail(
         application,
         "/candidate/approve",
         "POST",
-        form={"candidate_id": candidate_id},
+        form={"candidate_id": candidate_id, "lang": "en"},
     )
 
     assert status == "422 Unprocessable Entity"
