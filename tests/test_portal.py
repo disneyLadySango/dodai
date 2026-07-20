@@ -6,6 +6,8 @@ from threading import Thread
 from time import sleep
 from urllib.parse import urlencode
 
+import yaml
+
 from dodai.portal import create_portal_application
 from dodai.product import ProductStore
 from dodai.projection import ProjectionContent, SampleContentProvider
@@ -131,6 +133,10 @@ def test_home_starts_and_resumes_multiple_product_bets(project: Path) -> None:
     assert "触れるプロダクト" in resumed
     assert "テスト結果" in resumed
     assert "説明資料" in resumed
+    assert "AIへ開発を任せても、事業の意図を見失わない" in resumed
+    assert "PM・エンジニア" in resumed
+    assert "コード・テスト・説明のずれ" in resumed
+    assert "何を作ったかではなく、なぜ正しいと言えるか" in resumed
 
 
 def test_invalid_inputs_are_explained_without_losing_progress(project: Path) -> None:
@@ -511,3 +517,89 @@ def test_keyless_sample_provider_completes_the_same_product_journey(project: Pat
     assert "振る舞い検証: PASS" in result
     assert "地域イベント" in result
     assert "参加者が関心のある催しへ参加意思を残せる" in result
+
+
+def test_approved_story_remains_visible_from_verification_through_result(project: Path) -> None:
+    application = create_portal_application(project, provider_factory=SampleContentProvider)
+    project_id = create_bet(application)
+    actor = "AIへ開発を任せるPM"
+    pain = "意図と成果物がずれ、何を正とすべきか判断できない"
+    outcome = "委譲した成果を事業意図に照らして判断できる"
+    request(application, f"/projects/{project_id}/problem", "POST", {"actor": actor, "pain": pain})
+    request(
+        application,
+        f"/projects/{project_id}/outcomes",
+        "POST",
+        {"outcome": outcome, "journey": "意図を伝える → 委譲する → 証拠で判断する"},
+    )
+
+    _, _, verification = request(application, f"/projects/{project_id}")
+    request(application, f"/projects/{project_id}/verification", "POST")
+    _, _, generation = request(application, f"/projects/{project_id}")
+    request(application, f"/projects/{project_id}/generate", "POST", {"consent": "yes"})
+    wait_for(application, project_id, "委譲結果と証拠")
+    _, _, ready = request(application, f"/projects/{project_id}")
+    _, _, result = request(application, f"/projects/{project_id}/result")
+
+    for page in (verification, generation, ready, result):
+        assert actor in page
+        assert pain in page
+        assert outcome in page
+        assert "この開発が解決すること" in page
+
+
+def test_delegation_result_distinguishes_proof_sample_and_reports_origin_evidence(
+    project: Path,
+) -> None:
+    application = create_portal_application(project, provider_factory=SampleContentProvider)
+    project_id = create_bet(application)
+    advance_to_generation(application, project_id)
+    request(application, f"/projects/{project_id}/generate", "POST", {"consent": "yes"})
+    wait_for(application, project_id, "委譲結果と証拠")
+
+    _, _, result = request(application, f"/projects/{project_id}/result")
+    evidence = yaml.safe_load(
+        (project / ".dodai/workspaces" / project_id / "projections/evidence.yaml").read_text()
+    )
+
+    assert "委譲結果と証拠" in result
+    assert "満たした検証" in result
+    assert "満たしていない検証" in result
+    assert "証明用サンプル" in result
+    assert "待機リストを作ることがDodaiの価値ではありません" in result
+    assert {item["path"] for item in evidence["presentations"]} == {
+        "developer/waitlist.py",
+        "developer/test_waitlist.py",
+        "stakeholder/brief.md",
+    }
+    assert all(item["story"] == "story_primary_pain" for item in evidence["presentations"])
+    assert all(item["criterion"] == "ac_primary_outcome" for item in evidence["presentations"])
+    assert all(
+        item["specification"] == "spec_primary_outcome_is_observable"
+        for item in evidence["presentations"]
+    )
+
+
+def test_outcome_evidence_identifies_the_failed_layer_and_next_change(project: Path) -> None:
+    application = create_portal_application(project, provider_factory=SampleContentProvider)
+    project_id = create_bet(application)
+    advance_to_generation(application, project_id)
+    request(application, f"/projects/{project_id}/generate", "POST", {"consent": "yes"})
+    wait_for(application, project_id, "委譲結果と証拠")
+
+    expected = {
+        "problem_not_observed": ("課題の見立て", "第2層"),
+        "behavior_passed_outcome_failed": ("確かめ方", "第4層"),
+        "behavior_failed": ("生成された成果", "Presentation"),
+        "insufficient_evidence": ("判断不能", "追加の証拠"),
+    }
+    for evidence_kind, phrases in expected.items():
+        _, _, page = request(
+            application,
+            f"/projects/{project_id}/telemetry",
+            "POST",
+            {"evidence_kind": evidence_kind, "evidence": "観測した事実"},
+        )
+        assert all(phrase in page for phrase in phrases)
+        assert "固定するもの" in page
+        assert "次に変えるもの" in page
