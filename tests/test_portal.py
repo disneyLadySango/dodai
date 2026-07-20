@@ -8,6 +8,7 @@ from urllib.parse import urlencode
 
 import yaml
 
+from dodai.delegation import DelegationResult
 from dodai.portal import create_portal_application
 from dodai.product import ProductStore
 from dodai.projection import ProjectionContent, SampleContentProvider
@@ -48,6 +49,47 @@ class SlowProvider(RecordingProvider):
     def derive(self, origin_text: str) -> ProjectionContent:
         sleep(0.08)
         return super().derive(origin_text)
+
+
+class RecordingDelegationRunner:
+    def __init__(self) -> None:
+        self.calls = 0
+        self.prompts: list[str] = []
+
+    def run(self, repository: Path, prompt: str) -> DelegationResult:
+        self.calls += 1
+        self.prompts.append(prompt)
+        repository.mkdir(parents=True, exist_ok=True)
+        (repository / "product.py").write_text("def outcome():\n    return 'verified'\n")
+        (repository / "test_product.py").write_text(
+            "from product import outcome\n\n"
+            "def test_outcome():\n"
+            "    assert outcome() == 'verified'\n"
+        )
+        (repository / "STAKEHOLDER.md").write_text(
+            "The delegated result serves the approved user outcome.\n"
+        )
+        return DelegationResult(
+            summary="Implemented one verified vertical journey.",
+            verification_status="passed",
+            verification_summary="1 delegated verification passed.",
+            stakeholder_summary="The approved user can complete the intended outcome.",
+            verification_commands=("python -m pytest",),
+        )
+
+
+class SlowDelegationRunner(RecordingDelegationRunner):
+    def run(self, repository: Path, prompt: str) -> DelegationResult:
+        sleep(0.08)
+        return super().run(repository, prompt)
+
+
+class FailOnceDelegationRunner(RecordingDelegationRunner):
+    def run(self, repository: Path, prompt: str) -> DelegationResult:
+        if self.calls == 0:
+            self.calls += 1
+            raise RuntimeError("temporary delegation failure")
+        return super().run(repository, prompt)
 
 
 def request(
@@ -603,3 +645,154 @@ def test_outcome_evidence_identifies_the_failed_layer_and_next_change(project: P
         assert all(phrase in page for phrase in phrases)
         assert "固定するもの" in page
         assert "次に変えるもの" in page
+
+
+def test_codex_delegation_requires_consent_and_starts_only_once(project: Path) -> None:
+    runner = SlowDelegationRunner()
+    application = create_portal_application(
+        project,
+        provider_factory=SampleContentProvider,
+        delegation_runner_factory=lambda: runner,
+    )
+    project_id = create_bet(application)
+    advance_to_generation(application, project_id)
+    request(application, f"/projects/{project_id}/generate", "POST", {"consent": "yes"})
+    wait_for(application, project_id, "委譲結果と証拠")
+
+    _, _, plan = request(application, f"/projects/{project_id}/delegate")
+    request(application, f"/projects/{project_id}/delegate", "POST")
+    submissions = [
+        Thread(
+            target=request,
+            args=(application, f"/projects/{project_id}/delegate", "POST", {"consent": "yes"}),
+        )
+        for _ in range(2)
+    ]
+    for submission in submissions:
+        submission.start()
+    for submission in submissions:
+        submission.join()
+    wait_for(application, project_id, "Codexの委譲結果")
+
+    assert "承認済みの事業意図" in plan
+    assert "Dodai管理下の隔離リポジトリ" in plan
+    assert "最大試行回数" in plan and "1回" in plan
+    assert "変更ファイル・検証結果・関係者向け説明" in plan
+    assert runner.calls == 1
+
+
+def test_codex_delegation_cannot_start_before_origin_projection_is_ready(project: Path) -> None:
+    runner = RecordingDelegationRunner()
+    application = create_portal_application(
+        project,
+        provider_factory=SampleContentProvider,
+        delegation_runner_factory=lambda: runner,
+    )
+    project_id = create_bet(application)
+
+    status, _, body = request(
+        application,
+        f"/projects/{project_id}/delegate",
+        "POST",
+        {"consent": "yes"},
+    )
+
+    assert status == "409 Conflict"
+    assert body == "Delegation not ready"
+    assert runner.calls == 0
+
+
+def test_delegation_result_connects_repository_evidence_to_origin(project: Path) -> None:
+    runner = RecordingDelegationRunner()
+    application = create_portal_application(
+        project,
+        provider_factory=SampleContentProvider,
+        delegation_runner_factory=lambda: runner,
+    )
+    project_id = create_bet(application)
+    advance_to_generation(application, project_id)
+    request(application, f"/projects/{project_id}/generate", "POST", {"consent": "yes"})
+    wait_for(application, project_id, "委譲結果と証拠")
+    request(application, f"/projects/{project_id}/delegate", "POST", {"consent": "yes"})
+    page = wait_for(application, project_id, "Codexの委譲結果")
+    workspace = project / ".dodai/workspaces" / project_id
+    evidence = yaml.safe_load((workspace / ".dodai/delegation/evidence.yaml").read_text())
+
+    assert "product.py" in page and "test_product.py" in page and "STAKEHOLDER.md" in page
+    assert "def outcome" in page
+    assert "検証: PASS" in page
+    assert "story_primary_pain" in page
+    assert "ac_primary_outcome" in page
+    assert "spec_primary_outcome_is_observable" in page
+    assert evidence["origin_evidence"] == {
+        "story": "story_primary_pain",
+        "criterion": "ac_primary_outcome",
+        "specification": "spec_primary_outcome_is_observable",
+    }
+    assert {item["path"] for item in evidence["artifacts"]} == {
+        "product.py",
+        "test_product.py",
+        "STAKEHOLDER.md",
+    }
+    assert (workspace / "delegation/repository/.git").is_dir()
+
+
+def test_result_can_be_accepted_or_redelegated_without_changing_origin(project: Path) -> None:
+    runner = RecordingDelegationRunner()
+    application = create_portal_application(
+        project,
+        provider_factory=SampleContentProvider,
+        delegation_runner_factory=lambda: runner,
+    )
+    project_id = create_bet(application)
+    advance_to_generation(application, project_id)
+    request(application, f"/projects/{project_id}/generate", "POST", {"consent": "yes"})
+    wait_for(application, project_id, "委譲結果と証拠")
+    request(application, f"/projects/{project_id}/delegate", "POST", {"consent": "yes"})
+    wait_for(application, project_id, "Codexの委譲結果")
+    workspace = project / ".dodai/workspaces" / project_id
+    before = {path.name: path.read_bytes() for path in (workspace / "origin").glob("*.yaml")}
+
+    _, _, retry = request(
+        application,
+        f"/projects/{project_id}/delegation/retry",
+        "POST",
+        {"feedback": "検証できない境界条件を追加で扱う"},
+    )
+    request(application, f"/projects/{project_id}/delegate", "POST", {"consent": "yes"})
+    result = wait_for(application, project_id, "Codexの委譲結果")
+    _, _, accepted = request(application, f"/projects/{project_id}/delegation/accept", "POST")
+    after = {path.name: path.read_bytes() for path in (workspace / "origin").glob("*.yaml")}
+
+    assert "承認済み意図は変更しません" in retry
+    assert "検証できない境界条件" in runner.prompts[-1]
+    assert "試行 2" in result
+    assert "この委譲結果を採用しました" in accepted
+    assert before == after
+    assert runner.calls == 2
+
+
+def test_failed_codex_delegation_is_resumable_without_losing_intent(project: Path) -> None:
+    runner = FailOnceDelegationRunner()
+    application = create_portal_application(
+        project,
+        provider_factory=SampleContentProvider,
+        delegation_runner_factory=lambda: runner,
+    )
+    project_id = create_bet(application)
+    advance_to_generation(application, project_id)
+    request(application, f"/projects/{project_id}/generate", "POST", {"consent": "yes"})
+    wait_for(application, project_id, "委譲結果と証拠")
+    workspace = project / ".dodai/workspaces" / project_id
+    before = {path.name: path.read_bytes() for path in (workspace / "origin").glob("*.yaml")}
+
+    request(application, f"/projects/{project_id}/delegate", "POST", {"consent": "yes"})
+    failed = wait_for(application, project_id, "委譲を完了できませんでした")
+    request(application, f"/projects/{project_id}/delegate", "POST", {"consent": "yes"})
+    completed = wait_for(application, project_id, "Codexの委譲結果")
+    after = {path.name: path.read_bytes() for path in (workspace / "origin").glob("*.yaml")}
+
+    assert "承認済み意図と既存の証拠は維持" in failed
+    assert "試行 2" in completed
+    assert before == after
+    assert runner.calls == 2

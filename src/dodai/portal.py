@@ -13,6 +13,14 @@ from urllib.parse import parse_qs
 
 import yaml
 
+from dodai.delegation import (
+    CodexCliRunner,
+    DelegationRunner,
+    collect_delegation_evidence,
+    load_delegation_evidence,
+    prepare_repository,
+    write_delegation_evidence,
+)
 from dodai.evidence import diagnose_failure
 from dodai.evolution import (
     approve_candidate,
@@ -42,6 +50,7 @@ from dodai.projection import (
 StartResponse = Callable[[str, list[tuple[str, str]]], Any]
 Application = Callable[[dict[str, Any], StartResponse], Iterable[bytes]]
 ProviderFactory = Callable[[], ContentProvider]
+DelegationRunnerFactory = Callable[[], DelegationRunner]
 
 
 def _form(environ: dict[str, Any]) -> dict[str, str]:
@@ -152,13 +161,13 @@ def _home(store: ProductStore, error: str = "") -> str:
         "プロダクト",
         "<h1>AIへ開発を任せても、事業の意図を見失わない。</h1>"
         '<p class="lede">Dodaiは、AIへ実装を委譲するPM・エンジニアのための開発基盤です。'
-        "誰の何を解決し、どうなれば成功かを正本にして、コード・テスト・説明のずれを防ぎます。</p>"
+        "誰の何を解決し、どうなれば成功かを正本にして、Codexへの実装委譲から証拠回収までをつなぎ、コード・テスト・説明のずれを防ぎます。</p>"
         '<section class="promise"><article><span class="number">01 / あなたが決める</span><strong>事業の意図</strong><span>誰の困りごとを、どう良くしたいか</span></article>'
         '<article><span class="number">02 / AIへ委譲する</span><strong>検証と実装</strong><span>技術的な作り方はDodaiが引き受ける</span></article>'
-        '<article><span class="number">03 / 証拠で判断する</span><strong>委譲結果</strong><span>触れるプロダクト・テスト結果・説明資料</span></article></section>'
+        '<article><span class="number">03 / 証拠で判断する</span><strong>実リポジトリの委譲結果</strong><span>変更内容・触れるプロダクト・テスト結果・説明資料</span></article></section>'
         '<section class="panel"><span class="number">Dodaiが返すもの</span>'
         "<h2>何を作ったかではなく、なぜ正しいと言えるか。</h2>"
-        "<p>すべての成果を、元のユーザーストーリー・成功条件・確かめ方へ結び付けます。"
+        "<p>Codexが案件専用リポジトリへ作ったすべての成果を、元のユーザーストーリー・成功条件・確かめ方へ結び付けます。"
         "失敗時は、課題の見立て・確かめ方・生成結果のどこを見直すべきか切り分けます。</p></section>"
         + (f'<p class="notice error">{escape(error)}</p>' if error else "")
         + '<form class="panel" method="post" action="/projects"><label for="name">新しいプロダクト名</label>'
@@ -331,10 +340,169 @@ def _history(workspace: Path) -> str:
     return f'<ul class="history">{items}</ul>'
 
 
+def _delegation_origin_summary(bet: ProductBet) -> str:
+    return (
+        f"# Approved product intent\n\n"
+        f"Actor: {bet.actor}\n\nPain: {bet.pain}\n\nOutcome: {bet.outcome}\n\n"
+        f"Minimal journey: {bet.journey}\n"
+    )
+
+
+def _delegation_prompt(bet: ProductBet) -> str:
+    feedback = (
+        f"\nPrior-result evidence to address: {bet.delegation_feedback}\n"
+        if bet.delegation_feedback
+        else ""
+    )
+    return (
+        "Implement one complete, usable vertical journey that satisfies ORIGIN.md. "
+        "Choose the technical approach yourself. Add automated verification and a concise "
+        "STAKEHOLDER.md that explains the result without implementation detail. Run the "
+        "verification before finishing. Do not commit changes. Return only the required "
+        "structured result."
+        f"{feedback}"
+    )
+
+
+def _delegation_plan(bet: ProductBet, message: str = "") -> str:
+    notice = f'<p class="notice">{escape(message)}</p>' if message else ""
+    return _layout(
+        bet.name,
+        f'<p class="meta">{escape(bet.name)}</p><h1>実装をCodexへ委譲する。</h1>{_intent(bet)}{notice}'
+        '<p class="lede">承認済みの事業意図を渡し、技術的な作り方はCodexへ任せます。承認済み意図は変更しません。</p>'
+        '<section class="grid"><article class="card"><span class="number">作業範囲</span>'
+        "<h2>Dodai管理下の隔離リポジトリ</h2><p>この案件専用の領域だけを書き換えます。Dodai本体や他の案件には触れません。</p></article>"
+        '<article class="card"><span class="number">最大試行回数</span><div class="metric">1回</div>'
+        "<p>この承認では1回だけ開始します。同時送信や再読み込みで重複実行しません。</p></article></section>"
+        '<section class="panel"><span class="number">完了後に受け取る証拠</span>'
+        "<h2>変更ファイル・検証結果・関係者向け説明</h2>"
+        "<p>すべてを同じStory・AC・Test specificationへ接続して表示します。Codexの生ログやSession IDは保存しません。</p>"
+        f'<form method="post" action="/projects/{bet.project_id}/delegate"><label>'
+        '<input style="width:auto" type="checkbox" name="consent" value="yes" required> '
+        "この事業意図と隔離範囲で、Codexへの1回の委譲を承認する</label>"
+        '<div class="actions"><button class="primary">Codexへ委譲する →</button>'
+        f'<a class="button" href="/projects/{bet.project_id}">判断画面へ戻る</a></div></form></section>',
+    )
+
+
+def _delegation_result(store: ProductStore, bet: ProductBet) -> str:
+    workspace = store.workspace(bet.project_id)
+    repository = workspace / "delegation" / "repository"
+    evidence = load_delegation_evidence(workspace)
+
+    def preview(path: Path) -> str:
+        if path.is_symlink() or not path.resolve().is_relative_to(repository.resolve()):
+            return "隔離リポジトリ外を参照する成果物は表示できません。"
+        content = path.read_bytes()
+        if b"\0" in content:
+            return "Binary artifact. Inspect it in the isolated repository."
+        return content.decode("utf-8", errors="replace")[:4000]
+
+    def change_label(change: object) -> str:
+        labels = {
+            "??": "新規",
+            "A": "追加",
+            "M": "変更",
+            "D": "削除",
+            "R": "移動",
+        }
+        value = str(change).strip()
+        return labels.get(value, value)
+
+    artifacts = "".join(
+        "<li><details><summary>"
+        f'<code>{escape(str(item["path"]))}</code> <span class="meta">{escape(change_label(item["change"]))}</span>'
+        "</summary><pre>"
+        f"{escape(preview(repository / str(item['path'])))}"
+        "</pre></details></li>"
+        for item in evidence["artifacts"]
+    )
+    origin_evidence = evidence["origin_evidence"]
+    accepted = (
+        '<p class="notice"><strong>採用済み</strong> この委譲結果を採用しました。</p>'
+        if bet.delegation_accepted
+        else ""
+    )
+    return (
+        f'<section class="panel"><span class="number">実リポジトリへの試行 {bet.delegation_attempts}</span>'
+        "<h2>Codexの委譲結果</h2>"
+        f"<p>{escape(str(evidence['summary']))}</p>{accepted}"
+        f'<div class="notice"><strong>検証: {"PASS" if evidence["verification_status"] == "passed" else "FAIL"}</strong>'
+        f"<p>{escape(str(evidence['verification_summary']))}</p>"
+        f"<p>成功した検証コマンド: {len(evidence.get('verification_commands', []))}件</p></div>"
+        f'<div class="grid"><div><h3>変更ファイル</h3><ul>{artifacts}</ul></div>'
+        f"<div><h3>関係者向け説明</h3><p>{escape(str(evidence['stakeholder_summary']))}</p></div></div>"
+        "<h3>原点への根拠</h3><p>"
+        f"<code>{escape(str(origin_evidence['story']))}</code> → "
+        f"<code>{escape(str(origin_evidence['criterion']))}</code> → "
+        f"<code>{escape(str(origin_evidence['specification']))}</code></p>"
+        + (
+            ""
+            if bet.delegation_accepted
+            else (
+                f'<div class="actions"><form method="post" action="/projects/{bet.project_id}/delegation/accept">'
+                '<button class="primary">この委譲結果を採用する</button></form></div>'
+                f'<form method="post" action="/projects/{bet.project_id}/delegation/retry">'
+                '<label>再委譲で改善したい観測事実</label><textarea name="feedback" required></textarea>'
+                "<button>意図を変えず再委譲を準備する →</button></form>"
+            )
+        )
+        + "</section>"
+    )
+
+
+def _delegation_status(store: ProductStore, bet: ProductBet) -> str:
+    if bet.delegation_status == "running":
+        return (
+            '<meta http-equiv="refresh" content="1"><section class="panel">'
+            '<span class="number">隔離リポジトリで実行中</span><h2>Codexが実装と検証を進めています。</h2>'
+            "<p>この画面を閉じても状態は保存されます。同じ承認から重複実行は起きません。</p></section>"
+        )
+    if bet.delegation_status in {"completed", "accepted"}:
+        return _delegation_result(store, bet)
+    if bet.delegation_status == "failed":
+        return (
+            '<section class="panel"><h2>委譲を完了できませんでした</h2>'
+            f'<p>{escape(bet.delegation_error)}</p><a class="button" href="/projects/{bet.project_id}/delegate">同じ意図から再開する →</a></section>'
+        )
+    return (
+        '<section class="panel"><span class="number">次の委譲</span><h2>この意図から、実リポジトリへ実装する。</h2>'
+        "<p>証明用サンプルではなく、案件専用の隔離リポジトリでCodexへ実際の実装と検証を任せます。</p>"
+        f'<a class="button primary" href="/projects/{bet.project_id}/delegate">委譲計画を確認する →</a></section>'
+    )
+
+
+def _complete_delegation(
+    store: ProductStore,
+    bet: ProductBet,
+    runner_factory: DelegationRunnerFactory,
+) -> None:
+    workspace = store.workspace(bet.project_id)
+    repository = workspace / "delegation" / "repository"
+    try:
+        prepare_repository(repository, origin_summary=_delegation_origin_summary(bet))
+        result = runner_factory().run(repository, _delegation_prompt(bet))
+        evidence = collect_delegation_evidence(repository, result, attempt=bet.delegation_attempts)
+        write_delegation_evidence(workspace, evidence)
+    except Exception:
+        store.update(
+            bet.project_id,
+            delegation_status="failed",
+            delegation_error="委譲は失敗しました。承認済み意図と既存の証拠は維持されています。",
+        )
+        return
+    store.update(
+        bet.project_id,
+        delegation_status="completed",
+        delegation_error="",
+    )
+
+
 def _ready(store: ProductStore, bet: ProductBet, message: str = "") -> str:
     workspace = store.workspace(bet.project_id)
     manifest = yaml.safe_load((workspace / "projections/manifest.yaml").read_text(encoding="utf-8"))
     notice = f'<p class="notice">{escape(message)}</p>' if message else ""
+    delegation = _delegation_status(store, bet)
     pending = ""
     if bet.pending_candidate:
         candidate = load_candidate(workspace, bet.pending_candidate)
@@ -367,8 +535,11 @@ def _ready(store: ProductStore, bet: ProductBet, message: str = "") -> str:
         )
     return _layout(
         bet.name,
-        f'<p class="meta">{escape(bet.name)}</p><h1>委譲結果と証拠</h1>{_steps("ready")}{_intent(bet)}{notice}'
-        '<p class="lede">動く成果を、触って判断する。作り方ではなく、承認した事業意図を満たした証拠を確認します。</p>'
+        f'<p class="meta">{escape(bet.name)}</p><h1>開発をCodexへ委譲し、証拠で判断する。</h1>{_steps("ready")}{_intent(bet)}{notice}'
+        '<p class="lede">委譲結果と証拠を一緒に確認します。作り方ではなく、承認した事業意図を満たしたかで判断します。</p>'
+        f"{delegation}"
+        '<section class="panel"><span class="number">原点導出の補助証拠</span><h2>交換可能な待機リストサンプル</h2>'
+        "<p>動く成果を、触って判断する補助証拠です。同じ原点から動作・検証・説明を安定再生成できることを示しますが、実委譲の成果ではありません。</p></section>"
         '<section class="grid"><article class="card"><p class="meta">原点ID</p>'
         f"<code>{escape(str(manifest['origin_digest']))}</code><p>{bet.model_requests}回のモデル要求を記録</p></article>"
         f'<article class="card"><p class="meta">振る舞い検証</p><div class="metric">{"PASS" if bet.verification_status == "passed" else "未確認"}</div>'
@@ -463,7 +634,8 @@ def _result_page(store: ProductStore, bet: ProductBet) -> str:
     brief = (workspace / "projections/stakeholder/brief.md").read_text(encoding="utf-8")
     return _layout(
         bet.name,
-        f'<p class="meta">{escape(bet.name)}</p><h1>委譲結果と証拠</h1>{_intent(bet)}'
+        f'<p class="meta">{escape(bet.name)}</p><h1>原点導出の証明用サンプル</h1>{_intent(bet)}'
+        '<p class="lede">これはCodexの実委譲結果と証拠ではなく、同じ原点から動作・検証・説明を再生成できることの補助証拠です。</p>'
         f'<div class="notice"><strong>振る舞い検証: {"PASS" if bet.verification_status == "passed" else "未確認"}</strong>'
         "<p><strong>満たした検証:</strong> 承認した最小体験を完了でき、重複と無効入力を期待通り扱える。</p>"
         "<p><strong>満たしていない検証:</strong> なし。未観測の事業成果は、利用後の証拠で判断します。</p></div>"
@@ -553,6 +725,7 @@ def create_portal_application(
     root: Path,
     *,
     provider_factory: ProviderFactory = OpenAIContentProvider,
+    delegation_runner_factory: DelegationRunnerFactory = CodexCliRunner,
     audit_application: Application | None = None,
 ) -> Application:
     store = ProductStore(root.resolve())
@@ -646,6 +819,78 @@ def create_portal_application(
             if bet.stage != "ready":
                 return _respond(start_response, "Projection not ready", "409 Conflict")
             return _respond(start_response, _result_page(store, bet))
+        if action == "delegate" and method == "GET":
+            if bet.stage != "ready":
+                return _respond(start_response, "Delegation not ready", "409 Conflict")
+            return _respond(start_response, _delegation_plan(bet))
+        if action == "delegate" and method == "POST":
+            if bet.stage != "ready":
+                return _respond(start_response, "Delegation not ready", "409 Conflict")
+            values = _form(environ)
+            if values.get("consent") != "yes":
+                return _respond(
+                    start_response,
+                    _delegation_plan(bet, "Codexへ委譲する前に明示承認が必要です。"),
+                    "422 Unprocessable Entity",
+                )
+            claimed = store.claim_delegation(project_id)
+            if claimed is not None:
+                Thread(
+                    target=_complete_delegation,
+                    args=(store, claimed, delegation_runner_factory),
+                    daemon=True,
+                ).start()
+            return _redirect(start_response, f"/projects/{project_id}")
+        if action == "delegation/accept" and method == "POST":
+            if bet.delegation_status != "completed":
+                return _respond(start_response, "Delegation result missing", "409 Conflict")
+            changed = store.update(
+                project_id,
+                delegation_status="accepted",
+                delegation_accepted=True,
+            )
+            decision_path = store.workspace(project_id) / ".dodai" / "delegation" / "adoption.yaml"
+            decision_path.write_text(
+                yaml.safe_dump(
+                    {
+                        "decision": "accepted",
+                        "attempt": changed.delegation_attempts,
+                        "origin_evidence": {
+                            "story": "story_primary_pain",
+                            "criterion": "ac_primary_outcome",
+                            "specification": "spec_primary_outcome_is_observable",
+                        },
+                    },
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+            return _respond(
+                start_response,
+                _ready(store, changed, "この委譲結果を採用しました。"),
+            )
+        if action == "delegation/retry" and method == "POST":
+            feedback = _form(environ).get("feedback", "").strip()
+            if not feedback:
+                return _respond(
+                    start_response,
+                    _ready(store, bet, "再委譲で改善したい観測事実を入力してください。"),
+                    "422 Unprocessable Entity",
+                )
+            changed = store.update(
+                project_id,
+                delegation_status="planned",
+                delegation_feedback=feedback,
+                delegation_accepted=False,
+                delegation_error="",
+            )
+            return _respond(
+                start_response,
+                _delegation_plan(
+                    changed,
+                    "前回の証拠を追加しました。承認済み意図は変更しません。",
+                ),
+            )
         if action == "preview":
             if bet.stage != "ready":
                 return _respond(start_response, "Projection not ready", "409 Conflict")
