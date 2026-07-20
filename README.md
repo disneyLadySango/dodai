@@ -102,6 +102,8 @@ Successful approval connects the human decision, before and after origin
 identities, validation, and resulting projection identity in local change
 history. Candidate and history state under `.dodai/` is ignored by Git.
 
+![dodai four-layer origin workbench](docs/assets/origin-workbench.png)
+
 The same lifecycle is available from the CLI:
 
 ```bash

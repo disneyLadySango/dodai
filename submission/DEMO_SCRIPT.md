@@ -16,30 +16,31 @@ stakeholder projections.
 
 ## 0:20–0:50 — The four-layer origin
 
-**Screen:** Open the definitions, user stories, acceptance criteria, and test
-specifications. Run `uv run dodai --root . lint`.
+**Screen:** Open the browser origin workbench, switch across the four layers,
+make a small candidate edit, and preview its affected records and projections.
 
 **Narration:**
 
 > The origin has four layers. Definitions supply the business vocabulary. User
 > stories contain only actors and pains. Acceptance criteria define falsifiable
 > outcomes, guardrails, and exit conditions. Test specifications verify those
-> outcomes without naming implementation details. The vocabulary linter reports
-> solution language in the wrong layer.
+> outcomes without naming implementation details. An edit stays a candidate
+> until its complete impact is valid and explicitly approved; rejection or
+> failed regeneration leaves the authoritative origin unchanged.
 
 ## 0:50–1:20 — GPT-5.6 and projections
 
-**Screen:** Run `bash scripts/demo-web.sh`. Show the four-step origin-to-evidence
-lineage, open the generated projection, submit an email, and return to run the
-isolated guardrail scenario. Do not run `--refresh` during recording.
+**Screen:** Return to the four-step origin-to-evidence lineage, open the
+generated projection, submit an email, and return to run the isolated guardrail
+scenario and show its adoption action. Do not run `--refresh` during recording.
 
 **Narration:**
 
 > GPT-5.6 reads the complete origin and derives one strict structured bundle of
 > shared product meaning. This screen reads the actual repository and traces
 > that meaning into a working product, behavioral tests, and an aligned
-> stakeholder brief. This committed bundle came from one live GPT-5.6 request.
-> The origin digest makes later regeneration stable without spending more model
+> stakeholder brief. GPT-5.6 was called for approved origin changes, then the
+> origin digest makes later regeneration stable without spending more model
 > tokens.
 
 ## 1:20–1:50 — Rebuild and outer loop
