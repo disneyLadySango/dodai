@@ -80,6 +80,12 @@ developer and stakeholder projections. From the same screen, a judge can open
 the generated waitlist or run an isolated guardrail-breach scenario and inspect
 the proposed verification. The scenario never changes the checkout.
 
+The browser opens in Japanese so the product owner can audit the complete
+four-layer origin directly. Use the `English` / `日本語` control in the header to
+switch presentation language. The language definition is explicitly mapped to
+stable origin record IDs; switching languages does not change impact analysis,
+approval outcomes, origin identity, or projection identity.
+
 ![dodai judge-facing origin-to-evidence showcase](docs/assets/showcase.png)
 
 The generated waitlist supports valid, duplicate, and invalid registration
