@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from shutil import copytree
 
+import pytest
 import yaml
 
 from dodai.evolution import (
@@ -26,6 +27,11 @@ class FixedProvider:
             call_to_action="Continue",
             stakeholder_summary="A governed origin change remains traceable across roles.",
         )
+
+
+class FailingProvider:
+    def derive(self, origin_text: str) -> ProjectionContent:
+        raise RuntimeError("Projection failed before approval.")
 
 
 def complete_project(project: Path) -> Path:
@@ -92,6 +98,21 @@ def test_approval_applies_complete_change_and_records_connected_history(project:
     assert history["before"]["origin_digest"] != history["after"]["origin_digest"]
     assert history["validation"] == {"errors": [], "warnings": []}
     assert history["after"]["projection_digest"] == result.projection_digest
+
+
+def test_failed_or_stale_approval_never_partially_changes_the_origin(project: Path) -> None:
+    complete_project(project)
+    candidate = prepare_candidate(project, "02-user-stories.yaml", revised_story_text(project))
+    story_path = project / "origin/02-user-stories.yaml"
+    before = story_path.read_bytes()
+
+    with pytest.raises(RuntimeError, match="Projection failed"):
+        approve_candidate(project, candidate.candidate_id, FailingProvider(), approved_by="human")
+    assert story_path.read_bytes() == before
+
+    story_path.write_text(story_path.read_text() + "\n")
+    with pytest.raises(ValueError, match="changed after the candidate"):
+        approve_candidate(project, candidate.candidate_id, FixedProvider(), approved_by="human")
 
 
 def test_guardrail_proposal_becomes_a_layer_four_candidate(project: Path) -> None:

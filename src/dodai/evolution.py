@@ -25,6 +25,7 @@ LAYER_COLLECTIONS = {
 @dataclass(frozen=True)
 class CandidateRevision:
     candidate_id: str
+    base_origin_digest: str
     layer_file: str
     proposed_text: str
     valid: bool
@@ -164,8 +165,9 @@ def prepare_candidate(root: Path, layer_file: str, proposed_text: str) -> Candid
     blocked = _blocked_bets(current_origin, proposed)
     errors = list(validation.errors)
     warnings = [warning.message for warning in validation.warnings]
+    base_origin_digest = _origin_digest(current_origin)
     candidate_id = sha256(
-        f"{_origin_digest(current_origin)}\n{layer_file}\n{canonical_text}".encode()
+        f"{base_origin_digest}\n{layer_file}\n{canonical_text}".encode()
     ).hexdigest()[:16]
     manifest_path = root / "projections/manifest.yaml"
     projections = []
@@ -173,6 +175,7 @@ def prepare_candidate(root: Path, layer_file: str, proposed_text: str) -> Candid
         projections = [str(path) for path in _read_mapping(manifest_path).get("files", [])]
     candidate = CandidateRevision(
         candidate_id=candidate_id,
+        base_origin_digest=base_origin_digest,
         layer_file=layer_file,
         proposed_text=canonical_text,
         valid=not errors and not warnings and not blocked,
@@ -201,6 +204,8 @@ def approve_candidate(
         raise ValueError("Only a valid, unblocked candidate can be approved.")
     before_origin = load_origin(root / "origin")
     before_origin_digest = _origin_digest(before_origin)
+    if before_origin_digest != candidate.base_origin_digest:
+        raise ValueError("The origin changed after the candidate was prepared; preview it again.")
     before_projection_digest = _read_mapping(root / "projections/manifest.yaml").get(
         "origin_digest"
     )
