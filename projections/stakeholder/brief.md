@@ -6,9 +6,9 @@ Product managers and engineers who delegate implementation to AI agents.
 
 ## Promise
 
-**Delegate implementation without losing product intent.**
+**Delegate product work without losing authoritative intent.**
 
-Keep product intent, verification, behavior, and stakeholder meaning aligned—without micromanaging technical methods or repeating the same translation for every audience.
+Keep product intent, verification, executable behavior, and stakeholder explanations aligned—while staying focused on business outcomes instead of technical methods.
 
 ## Journey
 
@@ -18,4 +18,4 @@ recognized without creating a duplicate.
 
 ## Why this projection exists
 
-Visitors can understand dodai’s value and join the waitlist. Their registration remains in place after restart.
+Visitors understand dodai’s value, join the waitlist, and remain registered after restart.

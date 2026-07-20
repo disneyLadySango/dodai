@@ -11,11 +11,11 @@ from urllib.parse import parse_qs
 from wsgiref.simple_server import make_server
 
 PRODUCT_NAME = "dodai"
-HEADLINE = "Delegate implementation without losing product intent."
+HEADLINE = "Delegate product work without losing authoritative intent."
 VALUE_PROPOSITION = (
-    "Keep product intent, verification, behavior, and stakeholder meaning "
-    + "aligned—without micromanaging technical methods or repeating the same "
-    + "translation for every audience."
+    "Keep product intent, verification, executable behavior, and stakeholder "
+    + "explanations aligned—while staying focused on business outcomes instead "
+    + "of technical methods."
 )
 CALL_TO_ACTION = "Join the waitlist"
 HTML_LANGUAGE = "en"

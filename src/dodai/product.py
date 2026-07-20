@@ -27,6 +27,9 @@ SOLUTION_TERMS = (
     "API",
 )
 
+DEFAULT_REGENERATION_SECONDS = 120
+DEFAULT_UNSUCCESSFUL_REVISIONS = 3
+
 
 @dataclass(frozen=True)
 class ProductBet:
@@ -36,8 +39,8 @@ class ProductBet:
     actor: str = ""
     pain: str = ""
     outcome: str = ""
-    guardrail_seconds: int = 120
-    exit_revisions: int = 3
+    guardrail_seconds: int = DEFAULT_REGENERATION_SECONDS
+    exit_revisions: int = DEFAULT_UNSUCCESSFUL_REVISIONS
     journey: str = ""
     pending_solution: str = ""
     error: str = ""
@@ -179,15 +182,15 @@ def record_outcomes(
     project_id: str,
     *,
     outcome: str,
-    guardrail_seconds: int,
-    exit_revisions: int,
     journey: str,
+    guardrail_seconds: int = DEFAULT_REGENERATION_SECONDS,
+    exit_revisions: int = DEFAULT_UNSUCCESSFUL_REVISIONS,
     term_name: str = "",
     term_definition: str = "",
 ) -> ProductBet:
     bet = store.load(project_id)
     if not outcome.strip() or not journey.strip():
-        raise ValueError("成功した状態と、利用者が経験する最小の流れを入力してください。")
+        raise ValueError("成功した状態と、利用者が最初にして結果を得るまでを入力してください。")
     workspace = store.workspace(project_id)
     origin = workspace / "origin"
     terms = [

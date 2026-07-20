@@ -26,7 +26,6 @@ from dodai.product import (
     ProductStore,
     approve_verification,
     generation_plan,
-    propose_verification,
     record_outcomes,
     record_problem,
     solution_terms,
@@ -75,13 +74,19 @@ a{{color:var(--ink)}}.brand{{font-weight:900;font-size:1.2rem;text-decoration:no
 h1{{font-size:clamp(2.8rem,7vw,6rem);line-height:.92;letter-spacing:-.065em;margin:0 0 22px}}h2{{letter-spacing:-.04em}}
 .lede{{font-size:1.18rem;line-height:1.65;color:var(--muted);max-width:720px}}.grid{{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:32px}}
 .card,.panel{{border:1px solid var(--ink);padding:24px;background:#faf7ef}}.card h2{{margin-top:0}}.empty{{border:1px dashed var(--line);padding:42px;margin-top:32px}}
+.promise{{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--ink);margin:28px 0 34px;background:#faf7ef}}
+.promise article{{padding:24px;border-right:1px solid var(--line)}}.promise article:last-child{{border-right:0}}
+.promise strong{{display:block;font-size:1.15rem;margin:8px 0}}.number{{font-size:.78rem;font-weight:900;color:var(--muted)}}
+.check-list{{display:grid;gap:12px;margin:24px 0}}.check{{display:grid;grid-template-columns:42px 1fr;gap:14px;align-items:start;border:1px solid var(--line);padding:18px;background:white}}
+.check-mark{{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--lime);font-weight:900}}.check h3{{margin:0 0 5px}}.check p{{margin:0;color:var(--muted);line-height:1.55}}
+details{{margin-top:22px;border-top:1px solid var(--line);padding-top:18px}}summary{{cursor:pointer;font-weight:800}}
 label{{display:block;font-weight:800;margin:18px 0 7px}}input,textarea,select{{width:100%;padding:13px;border:1px solid var(--line);background:white;font:inherit}}
 textarea{{min-height:110px}}button,.button{{display:inline-block;border:0;background:var(--ink);color:white;padding:14px 18px;font:inherit;font-weight:850;text-decoration:none;cursor:pointer}}
 .primary{{background:var(--lime);color:var(--ink)}}.actions{{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}}.notice{{background:#e5ffc2;border:1px solid var(--ink);padding:16px;margin:20px 0}}
 .error{{background:#ffe0d8}}.steps{{display:flex;gap:8px;flex-wrap:wrap;margin:28px 0}}.step{{border:1px solid var(--line);padding:8px 11px;font-size:.78rem}}.step.current{{background:var(--ink);color:white}}
 .meta{{color:var(--muted);font-size:.9rem}}.metric{{font-size:2rem;font-weight:900}}dl{{display:grid;grid-template-columns:180px 1fr;gap:10px}}dt{{font-weight:850}}dd{{margin:0}}code{{font-size:.82rem}}
 iframe{{width:100%;height:650px;border:1px solid var(--ink);background:white}}.history li{{margin:9px 0}}
-@media(max-width:760px){{.grid{{grid-template-columns:1fr}}dl{{grid-template-columns:1fr}}}}
+@media(max-width:760px){{.grid,.promise{{grid-template-columns:1fr}}.promise article{{border-right:0;border-bottom:1px solid var(--line)}}.promise article:last-child{{border-bottom:0}}dl{{grid-template-columns:1fr}}}}
 </style></head><body><header><a class="brand" href="/">dodai / 土台</a><nav><a href="/proof">仕組みを見る</a> · <a href="/workbench">監査モード</a></nav></header><main>{content}</main></body></html>"""
 
 
@@ -94,10 +99,10 @@ STAGES = (
 )
 STAGE_LABELS = {
     "problem": ("課題を整理中", "誰が何に困っているかを言葉にする"),
-    "outcomes": ("成果を設計中", "成功・ガードレール・撤退を決める"),
-    "verification": ("検証を承認待ち", "第4層の検証方法を確認する"),
+    "outcomes": ("成功を整理中", "成功と利用者の体験を書く"),
+    "verification": ("確かめ方を確認中", "Dodaiの確認方法を見る"),
     "generation": ("生成を承認待ち", "API回数と費用上限を確認する"),
-    "generating": ("射影を生成中", "承認済み原点から全射影を生成する"),
+    "generating": ("3つの成果を作成中", "プロダクト・テスト・説明資料を作る"),
     "ready": ("利用・学習", "生成物を試し、変更または学習する"),
 }
 
@@ -134,9 +139,11 @@ def _home(store: ProductStore, error: str = "") -> str:
     return _layout(
         "プロダクト",
         "<h1>課題から、<br>動く成果へ。</h1>"
-        '<p class="lede">あなたは誰の何を解くかと、成功・撤退の基準を決めます。'
-        "Dodaiは検証方法と実装を引き受け、すべての成果を原点へつなぎます。"
-        "このMVPでは、参加意思や登録を残す最小体験を一本通して証明します。</p>"
+        '<p class="lede">誰が何に困っていて、どうなれば成功かを教えてください。'
+        "Dodaiが確かめ方を考え、実際に触って判断できるところまで作ります。</p>"
+        '<section class="promise"><article><span class="number">01 / あなたが入力</span><strong>課題と成功</strong><span>誰の何を良くしたいか</span></article>'
+        '<article><span class="number">02 / Dodaiが担当</span><strong>検証と実装</strong><span>正しさの確認方法と作り方</span></article>'
+        '<article><span class="number">03 / あなたが受け取る</span><strong>3つの成果</strong><span>触れるプロダクト・テスト結果・説明資料</span></article></section>'
         + (f'<p class="notice error">{escape(error)}</p>' if error else "")
         + '<form class="panel" method="post" action="/projects"><label for="name">新しいプロダクト名</label>'
         '<input id="name" name="name" placeholder="例: 地域イベントの待機リスト" required>'
@@ -170,45 +177,60 @@ def _problem(bet: ProductBet) -> str:
 def _outcomes(bet: ProductBet) -> str:
     return _layout(
         bet.name,
-        f'<p class="meta">{escape(bet.name)}</p><h1>成功と撤退を決める。</h1>{_steps("outcomes")}'
+        f'<p class="meta">{escape(bet.name)}</p><h1>成功した状態を描く。</h1>{_steps("outcomes")}'
         f'<div class="notice"><strong>{escape(bet.actor)}</strong><p>{escape(bet.pain)}</p></div>'
         + (f'<p class="notice error">{escape(bet.error)}</p>' if bet.error else "")
         + '<form class="panel" method="post" action="/projects/'
         + bet.project_id
         + '/outcomes">'
-        '<label for="outcome">何が観測できたら、課題が改善したと言える？</label>'
-        '<textarea id="outcome" name="outcome" required></textarea>'
-        '<div class="grid"><div><label for="guardrail">再生成の上限時間（秒）</label>'
-        '<input id="guardrail" name="guardrail" type="number" value="120" min="1" required></div>'
-        '<div><label for="exit">何回不一致が続いたら方式を見直す？</label>'
-        '<input id="exit" name="exit" type="number" value="3" min="1" required></div></div>'
-        '<label for="journey">利用者が経験する最小の流れ</label>'
-        '<textarea id="journey" name="journey" placeholder="価値を理解し、参加を選び、後から参加済みだと分かる" required></textarea>'
-        '<h2>この賭けで使う業務用語</h2><div class="grid"><div><label for="term_name">用語</label>'
+        '<p class="lede">この2つをもとに、Dodaiが確認方法を提案します。技術や運用値を決める必要はありません。</p>'
+        '<label for="outcome">利用者がどうなれば「良くなった」と言える？</label>'
+        '<textarea id="outcome" name="outcome" placeholder="例: 関心のあるイベントへ参加意思を残せる" required></textarea>'
+        '<label for="journey">利用者は最初に何をして、最後にどうなる？</label>'
+        '<textarea id="journey" name="journey" placeholder="例: 開催情報を見る → 参加を選ぶ → 参加済みだと確認できる" required></textarea>'
+        "<details><summary>言葉の意味を補足する（任意）</summary><p>このプロダクトだけで特別な意味を持つ言葉があれば補足できます。空のままで構いません。</p>"
+        '<div class="grid"><div><label for="term_name">補足したい言葉</label>'
         '<input id="term_name" name="term_name" placeholder="例: 参加意思"></div>'
-        '<div><label for="term_definition">この賭けでの意味</label>'
-        '<input id="term_definition" name="term_definition" placeholder="例: 催しへの参加を希望している状態"></div></div>'
-        '<div class="actions"><button class="primary">検証方法を委譲する →</button></div></form>',
+        '<div><label for="term_definition">ここでの意味</label>'
+        '<input id="term_definition" name="term_definition" placeholder="例: イベントへの参加を希望している状態"></div></div></details>'
+        '<div class="actions"><button class="primary">Dodaiの確認方法を見る →</button></div></form>',
     )
 
 
 def _verification(store: ProductStore, bet: ProductBet) -> str:
+    checks = (
+        ("利用者の成功", f"実際の体験を通して「{bet.outcome}」を確認します。"),
+        (
+            "生成した成果の品質",
+            "動く成果・テスト・説明が同じ意図を表し、実用範囲で作れることを確認します。",
+        ),
+        (
+            "行き詰まりの検知",
+            "改善を繰り返しても一致しない場合は、別の方式を選ぶべき状態として記録します。",
+        ),
+    )
     rows = "".join(
-        f'<article class="card"><code>{escape(spec["id"])}</code><h2>{escape(spec["then"])}</h2>'
-        f"<p><strong>前提:</strong> {escape(spec['given'])}</p><p><strong>操作:</strong> {escape(spec['when'])}</p></article>"
-        for spec in propose_verification(store, bet.project_id)
+        f'<article class="check"><span class="check-mark">✓</span><div><h3>{escape(title)}</h3><p>{escape(description)}</p></div></article>'
+        for title, description in checks
+    )
+    context = (
+        f"<p><strong>{escape(bet.term_name)}</strong> — {escape(bet.term_definition)}</p>"
+        if bet.term_name and bet.term_definition
+        else ""
     )
     return _layout(
         bet.name,
-        f'<p class="meta">{escape(bet.name)}</p><h1>この方法で、正しさを証明します。</h1>{_steps("verification")}'
-        '<p class="lede">すべての成果条件に観測可能な検証があります。ここを承認するまで実装は始まりません。</p>'
-        '<section class="panel"><h2>あなたが承認した意図と成果</h2><dl>'
+        f'<p class="meta">{escape(bet.name)}</p><h1>作る前に、確かめ方を合わせる。</h1>{_steps("verification")}'
+        '<p class="lede">あなたは「何を良くしたいか」を決めました。Dodaiは、完成後に何を確かめれば正しいと言えるかを提案します。</p>'
+        '<section class="panel"><span class="number">01 / あなたが決めたこと</span><h2>課題と成功</h2><dl>'
         f"<dt>誰</dt><dd>{escape(bet.actor)}</dd><dt>痛み</dt><dd>{escape(bet.pain)}</dd>"
-        f"<dt>成功</dt><dd>{escape(bet.outcome)}</dd><dt>ガードレール</dt><dd>再生成 {bet.guardrail_seconds}秒以内</dd>"
-        f"<dt>撤退</dt><dd>不一致が {bet.exit_revisions}改訂続いたとき</dd>"
-        f"<dt>業務用語</dt><dd>{escape(bet.term_name or '未定義')} — {escape(bet.term_definition)}</dd></dl></section>"
-        f'<section class="grid">{rows}</section><div class="actions"><form method="post" action="/projects/{bet.project_id}/verification">'
-        '<button class="primary">第4層を承認する →</button></form>'
+        f"<dt>成功</dt><dd>{escape(bet.outcome)}</dd><dt>体験</dt><dd>{escape(bet.journey)}</dd></dl>{context}</section>"
+        f'<section class="panel"><span class="number">02 / Dodaiが確かめること</span><h2>完成後のチェック</h2><div class="check-list">{rows}</div>'
+        '<p class="meta">品質や停止判断に必要な運用条件は、Dodaiが管理します。</p></section>'
+        '<section class="panel"><span class="number">03 / 承認すると始まること</span><h2>触れる成果を作る準備</h2>'
+        "<p>次の画面でAPI利用と費用を確認したあと、触れるプロダクト・テスト結果・説明資料をまとめて生成します。</p></section>"
+        f'<div class="actions"><form method="post" action="/projects/{bet.project_id}/verification">'
+        '<button class="primary">この確かめ方で進む →</button></form>'
         f'<form method="post" action="/projects/{bet.project_id}/back/outcomes"><button>成果を修正する</button></form></div>',
     )
 
@@ -232,12 +254,16 @@ def _generation(store: ProductStore, bet: ProductBet, *, uses_external_model: bo
     )
     return _layout(
         bet.name,
-        f'<p class="meta">{escape(bet.name)}</p><h1>生成前の最終確認。</h1>{_steps("generation")}{notice}'
+        f'<p class="meta">{escape(bet.name)}</p><h1>この内容から、3つの成果を作ります。</h1>{_steps("generation")}{notice}'
+        '<p class="lede">開始すると、同じ課題と成功条件から、実際に触れるものと判断材料をまとめて作ります。</p>'
+        '<section class="promise"><article><span class="number">01</span><strong>触れるプロダクト</strong><span>利用者の体験をその場で試せます</span></article>'
+        '<article><span class="number">02</span><strong>テスト結果</strong><span>期待した振る舞いか確認できます</span></article>'
+        '<article><span class="number">03</span><strong>関係者向けの説明資料</strong><span>同じ意図を共有できます</span></article></section>'
         '<section class="grid"><article class="card"><p class="meta">最大APIリクエスト</p>'
         f'<div class="metric">{plan.maximum_requests}回</div><p>{source_message}</p></article>'
         '<article class="card"><p class="meta">変動費の上限</p>'
-        f'<div class="metric">${plan.maximum_cost_usd:.2f}</div><p>実際の請求額ではなく、この賭けのガードレール上限です。</p></article></section>'
-        '<section class="panel"><h2>生成する射影</h2><ul><li>動くプロダクトと検証</li><li>関係者向けの説明</li></ul>'
+        f'<div class="metric">${plan.maximum_cost_usd:.2f}</div><p>実際の請求額ではなく、この生成で許可する上限です。</p></article></section>'
+        '<section class="panel"><h2>開始前の確認</h2><p>ボタンを押すまで生成は始まりません。完了後は、3つの成果を同じ画面で確認できます。</p>'
         f'<form method="post" action="/projects/{bet.project_id}/generate"><label>'
         f'<input style="width:auto" type="checkbox" name="consent" value="yes" required> {consent_message}</label>'
         '<div class="actions"><button class="primary">生成を開始する →</button></div></form>'
@@ -255,10 +281,10 @@ def _generating(bet: ProductBet, *, uses_external_model: bool) -> str:
     return _layout(
         bet.name,
         '<meta http-equiv="refresh" content="1">'
-        f'<p class="meta">{escape(bet.name)}</p><h1>承認済み原点から、全射影を生成中。</h1>'
+        f'<p class="meta">{escape(bet.name)}</p><h1>3つの成果を作っています。</h1>'
         f'{_steps("generation")}<section class="panel"><h2>現在の処理</h2>'
         f"<p>{generation_source}、"
-        "動く成果・振る舞い検証・関係者向け説明を一括生成しています。</p>"
+        "触れるプロダクト・テスト結果・関係者向け説明をまとめて生成しています。</p>"
         "<p>この画面を閉じても判断と進捗は保存されます。後から同じ案件を開いて再開できます。</p></section>",
     )
 
@@ -562,8 +588,6 @@ def create_portal_application(
                     store,
                     project_id,
                     outcome=values.get("outcome", ""),
-                    guardrail_seconds=int(values.get("guardrail", "120")),
-                    exit_revisions=int(values.get("exit", "3")),
                     journey=values.get("journey", ""),
                     term_name=values.get("term_name", ""),
                     term_definition=values.get("term_definition", ""),
