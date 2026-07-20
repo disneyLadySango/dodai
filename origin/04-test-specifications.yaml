@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 4
   name: test_specifications
-revision: 6
+revision: 7
 specifications:
   - id: spec_origin_change_reaches_all_projections
     verifies: [ac_complete_regeneration]
@@ -179,6 +179,31 @@ specifications:
     given: Evidence about the observed problem, expected outcome, or produced behavior is available.
     when: The evidence is evaluated for learning.
     then: The result identifies the disproven layer or states that evidence is inconclusive, and identifies which approved meaning remains fixed and which part changes next.
+  - id: spec_delegation_waits_for_informed_consent
+    verifies: [ac_bounded_delegation_consent]
+    given: Approved intent and verification are ready for delegation.
+    when: The person reviews the delegation plan before work begins.
+    then: The approved purpose, isolated scope, maximum attempt count, and expected evidence are visible, and no work begins without explicit consent.
+  - id: spec_one_approval_starts_one_attempt
+    verifies: [ac_one_delegation_per_approval]
+    given: One approved delegation whose work is pending, active, completed, or recoverable after interruption.
+    when: Concurrent, repeated, or resumed start requests are made.
+    then: At most one attempt is started for that approval and its prior result remains resumable.
+  - id: spec_delegation_result_has_complete_evidence
+    verifies: [ac_complete_delegation_evidence]
+    given: Delegated work has reached a completed or failed result.
+    when: The person reviews its evidence.
+    then: Every changed artifact, verification outcome, and stakeholder meaning is visible and identifies an existing approved story, outcome criterion, and verification.
+  - id: spec_result_requires_explicit_adoption
+    verifies: [ac_explicit_adoption_decision]
+    given: A completed delegation result with its verification evidence.
+    when: The person accepts or leaves the result unaccepted.
+    then: Acceptance is recorded as an explicit decision, while leaving it unaccepted changes neither the approved origin nor the evidence.
+  - id: spec_redelegation_preserves_approved_intent
+    verifies: [ac_redelegation_retains_intent]
+    given: An unaccepted delegation result and evidence explaining what should improve.
+    when: The person requests another attempt.
+    then: A new bounded attempt is available with the prior evidence, while the approved actor, pain, outcome, and verification are unchanged.
   - id: spec_regeneration_stays_within_budget
     verifies: [guardrail_regeneration_budget]
     given: The sample product and documented reference conditions.

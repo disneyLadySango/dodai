@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 2
   name: user_stories
-revision: 6
+revision: 7
 stories:
   - id: story_authority_drift
     who: A product manager or engineer who delegates implementation to AI agents.
@@ -56,3 +56,6 @@ stories:
   - id: story_visible_input_result
     who: A product manager or engineer deciding whether to entrust product work to an AI agent.
     pain: When the journey does not explain what each answer enables and which observable results will be produced, the person cannot predict the value of continuing.
+  - id: story_delegation_handoff_evidence
+    who: A product manager or engineer who delegates product work and remains accountable for accepting the result.
+    pain: After delegation, gathering changed artifacts, verification, and role-specific meaning by hand makes the result costly to judge and unsafe to adopt.

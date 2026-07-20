@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 1
   name: definitions
-revision: 6
+revision: 7
 terms:
   - id: origin
     definition: The sole authority for product intent and constraints jointly maintained by people and AI agents.
@@ -118,6 +118,15 @@ terms:
   - id: failure_layer
     definition: The highest origin or presentation layer that observed evidence disproves, or an explicit inconclusive result.
     allowed_layers: [1, 2, 3, 4]
+  - id: delegation_run
+    definition: One bounded attempt to produce and verify work from approved intent.
+    allowed_layers: [1, 2, 3, 4]
+  - id: artifact_change
+    definition: An observable addition, modification, or removal produced during delegated work.
+    allowed_layers: [1, 3, 4]
+  - id: adoption_decision
+    definition: A person's explicit judgment to accept a delegation result or request another attempt.
+    allowed_layers: [1, 3, 4]
 boundary_terms:
   story_solution_vocabulary:
     forbidden_in: [2]
