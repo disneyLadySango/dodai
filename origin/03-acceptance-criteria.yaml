@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 3
   name: acceptance_criteria
-revision: 4
+revision: 5
 criteria:
   - id: ac_complete_regeneration
     kind: outcome
@@ -104,6 +104,18 @@ criteria:
     kind: outcome
     supports: [story_accessible_learning_loop, story_failure_diagnosis]
     statement: A person can provide representative outcome evidence and receive an explained continue, revise-verification, or end-bet decision, with approved learning connected to the affected product bet.
+  - id: ac_lightweight_guided_input
+    kind: outcome
+    supports: [story_lightweight_origin_input, story_problem_first_start]
+    statement: A person can reach verification review by answering only ordinary questions about the person, pain, observable improvement, and the first-action-to-result experience; operational thresholds are owned by dodai and additional shared language is optional context.
+  - id: ac_readable_verification_review
+    kind: outcome
+    supports: [story_lightweight_origin_input, story_delegated_verification]
+    statement: Before approval, a person can distinguish their approved intent, what dodai will verify, and what approval starts without reading internal record identifiers or verification notation.
+  - id: ac_visible_input_to_result
+    kind: outcome
+    supports: [story_visible_input_result, story_visible_journey]
+    statement: From the first screen through generation consent, each stage states what the person provides, what dodai does next, and which runnable, verified, and explanatory results the person will receive.
   - id: guardrail_regeneration_budget
     kind: guardrail
     supports: [ac_complete_regeneration]

@@ -90,6 +90,9 @@ records:
   generation_plan: 生成前に確認できる、射影作業・モデル利用・検証の計画。
   progress: 賭けの現在地、完了判断、次の判断、復旧可能な失敗。
   learning_decision: 証拠に基づき、続行・検証変更・撤退を選ぶ判断。
+  guided_input: 原点の仕組みを設定せず、通常のプロダクト言語で答えられる主要な質問。
+  optional_context: 共通理解に役立つ場合だけ追加でき、先へ進むためには必須でない意味の補足。
+  expected_result: 承認した操作の後に得られる、観測可能なプロダクト・検証・説明。
   story_authority_drift: 意図・実行・検証・説明がずれ、何が正しい意味か分からなくなる。
   story_method_micromanagement: 技術的方法の指示に時間を奪われ、ビジネス課題へ集中できない。
   story_repeated_translation: 同じ意図を対象者ごとに翻訳し直し、手間と意味の不一致が生じる。
@@ -105,6 +108,8 @@ records:
   story_predictable_model_use: 予告のない重複モデル利用により、委譲コストが予測不能になる。
   story_accessible_learning_loop: 内部コマンドや実装知識が必要だと、証拠と学習を判断へ利用できない。
   story_multiple_product_bets: 案件の一覧と再開状態がなければ、複数の賭けを見つけて継続できない。
+  story_lightweight_origin_input: 内部用語・運用値・曖昧な質問・必須の用語定義が、価値を試す前の設定作業になっている。
+  story_visible_input_result: 各回答で何が進み、最後に何が生成されるか見えないと、続ける価値を判断できない。
   ac_complete_regeneration: 原点への1変更を、1回の操作で全射影へ反映できる。
   ac_stable_regeneration: 原点が同じなら、再射影しても観測可能な差がない。
   ac_role_projections: 同じ原点から、実行可能な開発者向け射影と人間可読な関係者向け射影が得られる。
@@ -130,6 +135,9 @@ records:
   ac_runnable_projection_journey: 生成直後に動く射影、検証結果、同じ意味の説明を確認できる。
   ac_plain_language_change_journey: 内部表現を編集せず、自然言語の変更影響を承認して安定再射影できる。
   ac_accessible_learning_decision: 成果データから続行・検証変更・撤退の理由を得て、学習を賭けへ残せる。
+  ac_lightweight_guided_input: 人・困りごと・改善・最初の行動から結果だけを答えれば検証確認へ進め、運用値はDodaiが持ち、言葉の補足は任意である。
+  ac_readable_verification_review: 内部IDや検証記法を読まず、承認した意図・Dodaiの確認内容・承認後に始まることを区別できる。
+  ac_visible_input_to_result: 最初の画面から生成承認まで、入力・Dodaiの次の仕事・最後に得られる3つの成果が分かる。
   guardrail_regeneration_budget: 全射影の再生成を対話的に使える時間と費用へ収める。
   exit_origin_representation: 表現改訂を3回続けてもリビルド不一致なら、現在の表現方式を撤退する。
   spec_origin_change_reaches_all_projections: 原点の1文を変え1回再生成すると、全射影へ反映されることを検証する。
@@ -160,3 +168,7 @@ records:
   spec_evidence_produces_explained_learning_decision: 証拠から続行・検証変更・撤退を説明し、学習を次の提案へ残すことを検証する。
   spec_regeneration_stays_within_budget: 再生成の時間と変動費が有効なしきい値以内であることを検証する。
   spec_persistent_mismatch_ends_bet: 不一致改訂数がしきい値へ達したら、別方式の前に現在の賭けを終了することを検証する。
+  spec_primary_questions_are_enough: 運用値や言葉の補足なしでも、主要質問だけで有効な検証確認へ進めることを検証する。
+  spec_optional_context_stays_secondary: プロダクト固有の言葉の補足は閉じた任意項目で、空でも進めることを検証する。
+  spec_verification_review_uses_decision_language: 意図・観測可能な確認・承認後の結果が視覚的に分かれ、内部IDと検証記法が主要表示に出ないことを検証する。
+  spec_each_stage_connects_input_to_result: 各段階で入力・Dodaiの次の仕事・最後の動く成果・検証・説明が結び付いて見えることを検証する。

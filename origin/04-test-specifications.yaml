@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 4
   name: test_specifications
-revision: 4
+revision: 5
 specifications:
   - id: spec_origin_change_reaches_all_projections
     verifies: [ac_complete_regeneration]
@@ -134,6 +134,26 @@ specifications:
     given: Representative outcome evidence for an active product bet.
     when: A person evaluates the evidence against its outcomes, guardrails, and exit conditions.
     then: A continue, revise-verification, or end-bet decision is explained; approved verification changes or losing records remain connected to that product bet and guide later proposals.
+  - id: spec_primary_questions_are_enough
+    verifies: [ac_lightweight_guided_input]
+    given: A person has no operational thresholds or shared-language definition to provide.
+    when: The person answers the primary guided questions in ordinary product language.
+    then: Verification review is reached, active operational conditions are complete, and no optional context was required.
+  - id: spec_optional_context_stays_secondary
+    verifies: [ac_lightweight_guided_input]
+    given: A person may want to clarify a term whose meaning is specific to the product.
+    when: The person reviews the outcome questions.
+    then: The clarification is available as collapsed optional context and leaving it empty does not prevent progress.
+  - id: spec_verification_review_uses_decision_language
+    verifies: [ac_readable_verification_review]
+    given: Complete intent, outcomes, operational conditions, and proposed verification.
+    when: The person reviews verification before approval.
+    then: Approved intent, observable checks, and the consequence of approval are visually distinct, while internal identifiers and verification notation remain outside the primary presentation.
+  - id: spec_each_stage_connects_input_to_result
+    verifies: [ac_visible_input_to_result]
+    given: A person who has not previously used dodai.
+    when: The person reviews the first screen, outcome questions, verification review, and generation consent.
+    then: Each stage explains the current input, dodai's next responsibility, and the runnable product, verification result, and stakeholder explanation produced at the end.
   - id: spec_regeneration_stays_within_budget
     verifies: [guardrail_regeneration_budget]
     given: The sample product and documented reference conditions.
