@@ -359,6 +359,7 @@ def create_showcase_application(
         if path == "/projection":
             return _serve_projection(projection, environ, start_response)
         workbench = None
+        workbench_status = "200 OK"
         if path == "/workbench" and environ.get("REQUEST_METHOD", "GET").upper() == "GET":
             query = parse_qs(str(environ.get("QUERY_STRING", "")))
             selected_layer = query.get("layer", ["02-user-stories.yaml"])[0]
@@ -371,18 +372,25 @@ def create_showcase_application(
             workbench = _render_workbench(root, candidate)
         elif path == "/candidate/approve" and environ.get("REQUEST_METHOD") == "POST":
             form = _read_form(environ)
-            result = approve_candidate(
-                root, form["candidate_id"], provider_factory(), approved_by="local human"
-            )
-            workbench = _render_workbench(
-                root,
-                message="Revision approved and every projection regenerated.",
-                history_path=result.history_path,
-            )
+            try:
+                result = approve_candidate(
+                    root, form["candidate_id"], provider_factory(), approved_by="local human"
+                )
+            except Exception:
+                workbench_status = "422 Unprocessable Entity"
+                workbench = _render_workbench(
+                    root, message="Approval failed; the authoritative origin is unchanged."
+                )
+            else:
+                workbench = _render_workbench(
+                    root,
+                    message="Revision approved and every projection regenerated.",
+                    history_path=result.history_path,
+                )
         if workbench is not None:
             body = workbench.encode("utf-8")
             start_response(
-                "200 OK",
+                workbench_status,
                 [("Content-Type", "text/html; charset=utf-8"), ("Content-Length", str(len(body)))],
             )
             return [body]

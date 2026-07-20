@@ -23,6 +23,11 @@ class WorkbenchProvider:
         )
 
 
+class FailingWorkbenchProvider:
+    def derive(self, origin_text: str) -> ProjectionContent:
+        raise RuntimeError("sensitive provider detail")
+
+
 def showcase_project(project: Path) -> Path:
     repository_root = Path(__file__).parents[1]
     copytree(repository_root / "projections", project / "projections")
@@ -180,3 +185,34 @@ def test_workbench_approval_applies_candidate_and_shows_history(project: Path) -
     assert "Revision approved" in page
     assert "Change history" in page
     assert "approved consequences" in (project / "origin/02-user-stories.yaml").read_text()
+
+
+def test_workbench_failed_approval_is_safe_and_does_not_expose_provider_detail(
+    project: Path,
+) -> None:
+    project = showcase_project(project)
+    application = create_showcase_application(project, provider_factory=FailingWorkbenchProvider)
+    story_path = project / "origin/02-user-stories.yaml"
+    original = story_path.read_text()
+    proposed = original.replace("revision: 2", "revision: 3", 1).replace(
+        "authoritative meaning is unclear.", "approval consequences are unclear."
+    )
+    _, preview = request(
+        application,
+        "/candidate",
+        "POST",
+        form={"layer_file": "02-user-stories.yaml", "proposed_text": proposed},
+    )
+    candidate_id = preview.split('name="candidate_id" value="', 1)[1].split('"', 1)[0]
+
+    status, page = request(
+        application,
+        "/candidate/approve",
+        "POST",
+        form={"candidate_id": candidate_id},
+    )
+
+    assert status == "422 Unprocessable Entity"
+    assert "Approval failed; the authoritative origin is unchanged." in page
+    assert "sensitive provider detail" not in page
+    assert story_path.read_text() == original
