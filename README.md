@@ -89,6 +89,64 @@ OpenAI API.
 
 ![Generated dodai waitlist browser experience](docs/assets/browser-demo.png)
 
+## Evolve the origin safely
+
+Open <http://127.0.0.1:8000/workbench> after starting the browser showcase. The
+workbench exposes all four authoritative layers. Editing a layer creates a
+candidate revision: Dodai validates it, reports every affected origin record
+and active projection, and leaves the current origin unchanged.
+
+Explicit approval verifies and regenerates the complete candidate before making
+it authoritative. A failed regeneration or a stale preview changes nothing.
+Successful approval connects the human decision, before and after origin
+identities, validation, and resulting projection identity in local change
+history. Candidate and history state under `.dodai/` is ignored by Git.
+
+The same lifecycle is available from the CLI:
+
+```bash
+uv run dodai --root . preview 02-user-stories.yaml candidate.yaml
+uv run dodai --root . approve CANDIDATE_ID --approved-by "Product owner"
+uv run dodai --root . reject CANDIDATE_ID
+uv run dodai --root . derivability
+uv run dodai --root . attribution
+```
+
+Approval uses GPT-5.6 when the candidate has no approved semantic bundle. Add
+`--sample` only for an inspectable keyless exercise; it is never presented as a
+replacement for the live model path.
+
+## Adopt product learning
+
+A guardrail breach remains a non-authoritative proposal. It can be reviewed as
+a layer-four candidate and explicitly adopted while layers two and three stay
+fixed:
+
+```bash
+uv run dodai --root . adopt .dodai/proposals/PROPOSAL.yaml
+```
+
+Candidates that repeat an approach named by a story-level losing record are
+blocked with the prior evidence. The browser showcase exposes the same proposal
+adoption path after its isolated guardrail scenario.
+
+## Start another origin
+
+Initialize a second product without changing Dodai itself:
+
+```bash
+uv run dodai init ./another-product \
+  --name another-product \
+  --who "A team accountable for a product outcome." \
+  --pain "Product intent and role-specific explanations diverge." \
+  --journey "A person reviews one approved outcome and its evidence."
+```
+
+The initialized workspace contains a valid four-layer origin and projection
+pin. `waitlist` retains the interactive sample; `brief` is the reusable
+executable-meaning projection. The renderer decision is documented in
+[ADR 0003](docs/adr/0003-configured-projection-kinds.md).
+
 ## Derive content with GPT-5.6
 
 Set `OPENAI_API_KEY` in your environment or secret manager. Never add it to this
@@ -165,10 +223,16 @@ four-layer origin + projection pins
                    +---- rebuild ----+
 
 simulated telemetry ---> guardrail proposal | story-level losing record
+
+candidate revision ---> impact preview ---> human approval
+        |                                      |
+        +---- reject: no observable change    +---- validation + regeneration + history
 ```
 
 Technical choices are projections, not origin requirements. They are retained
 under `docs/adr/` and `pins/` to make regeneration reviewable and stable.
+Governed origin transactions are documented in
+[ADR 0002](docs/adr/0002-governed-origin-transactions.md).
 
 ## Codex collaboration
 
