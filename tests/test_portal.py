@@ -7,6 +7,7 @@ from time import sleep
 from urllib.parse import urlencode
 
 from dodai.portal import create_portal_application
+from dodai.product import ProductStore
 from dodai.projection import ProjectionContent, SampleContentProvider
 
 
@@ -90,14 +91,12 @@ def advance_to_generation(application, project_id: str) -> None:
         "POST",
         {
             "outcome": "参加者が関心のある催しへ参加意思を残せる。",
-            "guardrail": "120",
-            "exit": "3",
             "journey": "価値を理解し、参加を選び、後から参加済みだと分かる。",
         },
     )
     status, _, verification = request(application, f"/projects/{project_id}")
     assert status == "200 OK"
-    assert "ここを承認するまで実装は始まりません" in verification
+    assert "承認すると始まること" in verification
     request(application, f"/projects/{project_id}/verification", "POST")
 
 
@@ -129,6 +128,9 @@ def test_home_starts_and_resumes_multiple_product_bets(project: Path) -> None:
     assert resumed.count("続きから始める") == 2
     assert "課題を整理中" in resumed
     assert "誰が何に困っているかを言葉にする" in resumed
+    assert "触れるプロダクト" in resumed
+    assert "テスト結果" in resumed
+    assert "説明資料" in resumed
 
 
 def test_invalid_inputs_are_explained_without_losing_progress(project: Path) -> None:
@@ -174,7 +176,7 @@ def test_solution_vocabulary_returns_discovery_to_intended_outcome(project: Path
 
     assert "Howを検出しました" in warning
     assert "それによって実現したい成果" in warning
-    assert "成功と撤退を決める" in outcomes
+    assert "成功した状態を描く" in outcomes
     state = (project / ".dodai/workspaces" / f"{project_id}.yaml").read_text()
     assert "アプリ" not in state
     assert "関心のある催しを見逃さない" in state
@@ -197,8 +199,6 @@ def test_verification_review_shows_approved_meaning_and_can_return_for_revision(
         "POST",
         {
             "outcome": "参加意思を残せる。",
-            "guardrail": "120",
-            "exit": "3",
             "journey": "価値を理解して参加する。",
             "term_name": "参加意思",
             "term_definition": "催しへの参加を希望する状態",
@@ -209,10 +209,84 @@ def test_verification_review_shows_approved_meaning_and_can_return_for_revision(
     request(application, f"/projects/{project_id}/back/outcomes", "POST")
     _, _, revised = request(application, f"/projects/{project_id}")
 
-    assert "あなたが承認した意図と成果" in verification
+    assert "あなたが決めたこと" in verification
+    assert "Dodaiが確かめること" in verification
+    assert "承認すると始まること" in verification
     assert "参加意思" in verification
     assert "催しへの参加を希望する状態" in verification
-    assert "成功と撤退を決める" in revised
+    assert "spec_primary_outcome_is_observable" not in verification
+    assert "前提:" not in verification
+    assert "再生成 120秒" not in verification
+    assert "不一致が 3改訂" not in verification
+    assert "成功した状態を描く" in revised
+
+
+def test_outcome_questions_are_lightweight_and_operational_defaults_are_internal(
+    project: Path,
+) -> None:
+    application = create_portal_application(project)
+    project_id = create_bet(application)
+    request(
+        application,
+        f"/projects/{project_id}/problem",
+        "POST",
+        {"actor": "地域の参加者", "pain": "催しを見逃す"},
+    )
+
+    _, _, page = request(application, f"/projects/{project_id}")
+    request(
+        application,
+        f"/projects/{project_id}/outcomes",
+        "POST",
+        {
+            "outcome": "関心のある催しへ参加意思を残せる。",
+            "journey": "開催情報を見る → 参加を選ぶ → 参加済みだと確認できる",
+        },
+    )
+    _, _, verification = request(application, f"/projects/{project_id}")
+
+    assert "再生成の上限時間" not in page
+    assert "何回不一致" not in page
+    assert "利用者は最初に何をして、最後にどうなる？" in page
+    assert "言葉の意味を補足する（任意）" in page
+    assert "この賭け" not in page
+    assert "業務用語" not in page
+    assert "運用条件は、Dodaiが管理" in verification
+    criteria = (
+        project / ".dodai/workspaces" / project_id / "origin/03-acceptance-criteria.yaml"
+    ).read_text()
+    assert "threshold: 120" in criteria
+    assert "threshold: 3" in criteria
+
+
+def test_hidden_operational_conditions_preserve_existing_project_decisions(
+    project: Path,
+) -> None:
+    application = create_portal_application(project)
+    project_id = create_bet(application)
+    request(
+        application,
+        f"/projects/{project_id}/problem",
+        "POST",
+        {"actor": "地域の参加者", "pain": "催しを見逃す"},
+    )
+    ProductStore(project).update(project_id, guardrail_seconds=90, exit_revisions=5)
+
+    request(
+        application,
+        f"/projects/{project_id}/outcomes",
+        "POST",
+        {
+            "outcome": "関心のある催しへ参加意思を残せる。",
+            "journey": "開催情報を見る → 参加を選ぶ → 参加済みだと確認できる",
+        },
+    )
+
+    criteria = (
+        project / ".dodai/workspaces" / project_id / "origin/03-acceptance-criteria.yaml"
+    ).read_text()
+    assert "threshold: 90" in criteria
+    assert "threshold: 5" in criteria
 
 
 def test_generation_requires_consent_and_never_requests_same_identity_twice(
@@ -241,6 +315,10 @@ def test_generation_requires_consent_and_never_requests_same_identity_twice(
     )
     wait_for(application, project_id, "動く成果を、触って判断する")
 
+    assert "この内容から、3つの成果を作ります" in plan
+    assert "触れるプロダクト" in plan
+    assert "テスト結果" in plan
+    assert "関係者向けの説明資料" in plan
     assert "最大APIリクエスト" in plan and "1回" in plan
     assert "生成前の明示承認が必要" in stopped
     assert "動く成果を、触って判断する" in ready
@@ -285,9 +363,9 @@ def test_generation_progress_is_visible_and_survives_navigation(project: Path) -
     home_status, _, home = request(application)
     ready = wait_for(application, project_id, "動く成果を、触って判断する")
 
-    assert "全射影を生成中" in progress
+    assert "3つの成果を作っています" in progress
     assert "この画面を閉じても" in progress
-    assert home_status == "200 OK" and "射影を生成中" in home
+    assert home_status == "200 OK" and "3つの成果を作成中" in home
     assert "動く成果を、触って判断する" in ready
 
 
@@ -404,7 +482,7 @@ def test_failed_generation_is_visible_and_resumable_without_losing_decisions(
     ready = wait_for(restarted, project_id, "動く成果を、触って判断する")
 
     assert "生成に失敗" in failed and "再開できます" in failed
-    assert "生成前の最終確認" in failed
+    assert "この内容から、3つの成果を作ります" in failed
     assert "動く成果を、触って判断する" in ready
     assert "2回のモデル要求を記録" in ready
     assert provider.requests == 2

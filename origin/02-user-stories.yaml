@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 2
   name: user_stories
-revision: 4
+revision: 5
 stories:
   - id: story_authority_drift
     who: A product manager or engineer who delegates implementation to AI agents.
@@ -50,3 +50,9 @@ stories:
   - id: story_multiple_product_bets
     who: A product manager or engineer responsible for more than one product bet over time.
     pain: Without a clear inventory and resumable state, separate bets become difficult to find, distinguish, and continue.
+  - id: story_lightweight_origin_input
+    who: A product manager or engineer trying origin-driven development for the first time.
+    pain: Internal terminology, operational thresholds, ambiguous questions, and required vocabulary work make the person configure the tool before experiencing its value.
+  - id: story_visible_input_result
+    who: A product manager or engineer deciding whether to entrust product work to an AI agent.
+    pain: When the journey does not explain what each answer enables and which observable results will be produced, the person cannot predict the value of continuing.

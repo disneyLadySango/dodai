@@ -17,14 +17,16 @@ Briefly enter a solution term to show the intent-recovery question.
 
 ## 0:20–0:55 — Outcomes and verification approval
 
-**Screen:** Define one business term, the outcome, guardrail, exit condition, and
-minimal journey. Show the proposed verification and approve layer four.
+**Screen:** Describe observable improvement and what the person does first and
+receives last. Briefly show that product-specific language is optional. Review
+the three-part verification explanation and approve it.
 
 **Narration:**
 
-> I own vocabulary, pain, and falsifiable outcomes. dodai owns how to verify them.
-> Every outcome, guardrail, and exit condition has observable verification, and no
-> implementation begins until I explicitly approve layer four.
+> I describe the person, pain, observable improvement, and the experience from first
+> action to result. dodai owns the operational thresholds and how to verify the
+> outcome. Before implementation, I can read what I decided, what dodai will check,
+> and what approval will produce—without internal identifiers or test notation.
 
 ## 0:55–1:30 — Informed GPT-5.6 generation and runnable result
 

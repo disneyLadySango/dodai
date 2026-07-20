@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 1
   name: definitions
-revision: 4
+revision: 5
 terms:
   - id: origin
     definition: The sole authority for product intent and constraints jointly maintained by people and AI agents.
@@ -97,6 +97,15 @@ terms:
   - id: learning_decision
     definition: An evidence-backed choice to continue, revise verification, or end a product bet.
     allowed_layers: [1, 3, 4]
+  - id: guided_input
+    definition: A primary question a person can answer in ordinary product language without configuring origin mechanics.
+    allowed_layers: [1, 2, 3, 4]
+  - id: optional_context
+    definition: Additional meaning a person may supply when it improves shared understanding but is not required to continue.
+    allowed_layers: [1, 2, 3, 4]
+  - id: expected_result
+    definition: The observable product, verification, or explanation a person receives after an approved action.
+    allowed_layers: [1, 2, 3, 4]
 boundary_terms:
   story_solution_vocabulary:
     forbidden_in: [2]

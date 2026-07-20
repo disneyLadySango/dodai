@@ -27,8 +27,10 @@ the boundaries between those layers.
 
 The product begins with a guided Japanese journey rather than an internal
 specification editor. A product owner names a bet, describes an actor and pain,
-recovers intent when solution vocabulary appears, defines business terms and
-falsifiable outcomes, and approves proposed verification before generation.
+recovers intent when solution vocabulary appears, describes observable success
+and the person's first action through final result, and approves proposed
+verification before generation. Operational thresholds remain Dodai-owned and
+product-specific language is collapsed optional context.
 Dodai shows the maximum model-request count, cost guardrail, and cache state
 before explicit consent.
 
