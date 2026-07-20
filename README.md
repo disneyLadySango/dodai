@@ -15,8 +15,9 @@ files:
 
 1. Name a product bet and describe its actor and pain in Japanese.
 2. Detect prescribed How and recover the intended outcome before it reaches a story.
-3. Define business vocabulary, success, a guardrail, and an exit condition.
-4. Review complete layer-four verification before projection work begins.
+3. Describe observable success and what the person does first and receives last.
+   Dodai owns operational defaults; product-specific language is optional context.
+4. Review a plain-language explanation of intent, checks, and what approval starts.
 5. Review the model-request maximum, cost guardrail, and cache state, then consent.
 6. Experience executable behavior, behavioral verification, and stakeholder meaning.
 7. Request a plain-language change and approve or reject its complete impact.
@@ -81,7 +82,7 @@ bash scripts/demo-web.sh
 ```
 
 Open <http://127.0.0.1:8000>. Create a product bet and complete the guided flow
-from pain through outcomes, verification approval, informed generation,
+from pain through success, verification approval, informed generation,
 runnable result, governed change, and telemetry learning. `demo-web.sh` uses the
 inspectable sample provider, so the complete journey requires no credential and
 makes no API request. Product-bet state is resumable under ignored

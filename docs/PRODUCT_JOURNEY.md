@@ -11,10 +11,10 @@ digests, pins, and raw projection files remain available in audit mode.
 
 | Stage | Product-owner action | Dodai responsibility | Executable evidence |
 | --- | --- | --- | --- |
-| Portfolio | Create, find, and resume a product bet | Preserve stage, next decision, and recoverable error | `test_home_starts_and_resumes_multiple_product_bets` |
+| Portfolio | See what to provide, what Dodai owns, and the three resulting artifacts; create, find, and resume a product | Preserve stage, next decision, and recoverable error | `test_home_starts_and_resumes_multiple_product_bets` |
 | Problem | Describe the actor and pain | Detect prescribed How and recover the intended outcome | `test_solution_vocabulary_returns_discovery_to_intended_outcome` |
-| Outcomes | Define one business term, success, guardrail, exit, and minimal journey | Produce valid origin layers one through three | `test_verification_review_shows_approved_meaning_and_can_return_for_revision` |
-| Verification | Review and approve observable verification | Cover every active outcome before generation | `test_verification_review_shows_approved_meaning_and_can_return_for_revision` |
+| Outcomes | Describe observable improvement and the person's first action through final result; optionally clarify one product-specific term | Apply operational defaults and produce valid origin layers one through three without exposing those mechanics | `test_outcome_questions_are_lightweight_and_operational_defaults_are_internal` |
+| Verification | Review intent, observable checks, and what approval starts in decision language | Cover every active outcome before generation without exposing internal identifiers or verification notation | `test_verification_review_shows_approved_meaning_and_can_return_for_revision` |
 | Generation plan | Inspect projection work, request maximum, cost guardrail, and cache status | Remain stopped until explicit consent and claim one generation under concurrent submission | `test_generation_requires_consent_and_never_requests_same_identity_twice`, `test_concurrent_generation_submissions_claim_one_model_request` |
 | Progress | Leave or revisit while generation runs | Persist progress and move to success or recoverable failure | `test_generation_progress_is_visible_and_survives_navigation` |
 | Result | Operate the generated product and read stakeholder meaning | Verify behavior and connect both roles to one origin identity | `test_keyless_sample_provider_completes_the_same_product_journey` |
