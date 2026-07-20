@@ -5,6 +5,8 @@ from pathlib import Path
 from shutil import copytree
 from urllib.parse import urlencode
 
+import yaml
+
 from dodai.projection import ProjectionContent
 from dodai.showcase import create_showcase_application
 
@@ -82,12 +84,17 @@ def test_showcase_demonstrates_guardrail_without_mutating_origin(project: Path) 
 
 
 def test_showcase_serves_the_generated_projection(project: Path) -> None:
-    application = create_showcase_application(showcase_project(project))
+    project = showcase_project(project)
+    application = create_showcase_application(project)
+    manifest = yaml.safe_load((project / "projections/manifest.yaml").read_text())
+    semantic = yaml.safe_load(
+        (project / ".dodai/cache" / f"{manifest['origin_digest']}.yaml").read_text()
+    )
 
     status, page = request(application, "/projection")
 
     assert status == "200 OK"
-    assert "One origin. Every projection. Less drift." in page
+    assert semantic["headline"] in page
     assert 'action="/projection"' in page
 
     status, page = request(application, "/projection", "POST", "judge@example.com")

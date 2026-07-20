@@ -12,7 +12,7 @@ from openai import OpenAI
 
 from dodai.origin import load_origin, validate_origin
 
-RENDERER_VERSION = "2"
+RENDERER_VERSION = "3"
 DEFAULT_MODEL = "gpt-5.6"
 
 
@@ -141,7 +141,7 @@ class ProjectionEngine:
             {
                 path.relative_to(projection_root).as_posix(): path.read_bytes()
                 for path in projection_root.rglob("*")
-                if path.is_file()
+                if path.is_file() and "__pycache__" not in path.parts and path.suffix != ".pyc"
             }
             if projection_root.exists()
             else {}
@@ -337,7 +337,7 @@ from pathlib import Path
 from urllib.parse import urlencode
 
 import pytest
-from waitlist import create_application, register
+from waitlist import HEADLINE, create_application, register
 
 
 def request(application, method: str = "GET", email: str = "") -> tuple[str, str]:
@@ -372,7 +372,7 @@ def test_browser_journey_explains_registration_outcomes(tmp_path: Path) -> None:
 
     status, page = request(application)
     assert status == "200 OK"
-    assert "One origin. Every projection. Less drift." in page
+    assert HEADLINE in page
 
     status, page = request(application, "POST", "person@example.com")
     assert status == "201 Created"

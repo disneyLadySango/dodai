@@ -59,6 +59,20 @@ def test_unchanged_origin_restores_identical_projections_without_model_call(proj
     assert second_provider.calls == 0
 
 
+def test_runtime_cache_does_not_make_an_unchanged_projection_look_changed(project: Path) -> None:
+    provider = CountingProvider()
+    engine = ProjectionEngine(project, provider)
+    engine.project()
+    runtime_cache = project / "projections/developer/__pycache__/waitlist.pyc"
+    runtime_cache.parent.mkdir(parents=True)
+    runtime_cache.write_bytes(b"local runtime artifact")
+
+    result = engine.project()
+
+    assert result.changed is False
+    assert provider.calls == 1
+
+
 def test_refresh_rederives_content_for_the_same_origin(project: Path) -> None:
     provider = CountingProvider()
     engine = ProjectionEngine(project, provider)

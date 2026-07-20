@@ -11,11 +11,11 @@ from urllib.parse import parse_qs
 from wsgiref.simple_server import make_server
 
 PRODUCT_NAME = "dodai"
-HEADLINE = "One origin. Every projection. Less drift."
+HEADLINE = "Keep product intent authoritative as AI agents implement it."
 VALUE_PROPOSITION = (
-    "Keep product intent authoritative while producing consistent developer "
-    + "and stakeholder projections—without repeatedly translating intent or "
-    + "directing technical methods."
+    "Use one origin to keep executable behavior, verification, and "
+    + "stakeholder explanations aligned—without repeatedly translating intent "
+    + "or directing technical methods."
 )
 CALL_TO_ACTION = "Join the waitlist"
 
