@@ -7,14 +7,24 @@ from collections.abc import Callable, Iterable
 from html import escape
 from pathlib import Path
 from typing import Any, cast
+from urllib.parse import parse_qs
 from wsgiref.simple_server import make_server
 
 import yaml
 
+from dodai.evolution import (
+    LAYER_COLLECTIONS,
+    CandidateRevision,
+    approve_candidate,
+    candidate_from_proposal,
+    prepare_candidate,
+)
 from dodai.outer_loop import evaluate_telemetry
+from dodai.projection import ContentProvider, OpenAIContentProvider
 
 StartResponse = Callable[[str, list[tuple[str, str]]], Any]
 Application = Callable[[dict[str, Any], StartResponse], Iterable[bytes]]
+ProviderFactory = Callable[[], ContentProvider]
 
 
 def _mapping(path: Path) -> dict[str, Any]:
@@ -25,27 +35,59 @@ def _mapping(path: Path) -> dict[str, Any]:
 
 
 def _projection_application(root: Path) -> Application:
-    path = root / "projections/developer/waitlist.py"
+    manifest = _mapping(root / "projections/manifest.yaml")
+    projection_kind = str(manifest.get("projection_kind", "waitlist"))
+    filename = "experience.py" if projection_kind == "brief" else "waitlist.py"
+    path = root / "projections/developer" / filename
     spec = importlib.util.spec_from_file_location("dodai_generated_waitlist", path)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Could not load generated projection from {path}.")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    if projection_kind == "brief":
+        meaning = cast(dict[str, str], module.describe())
+
+        def brief_application(
+            environ: dict[str, Any], start_response: StartResponse
+        ) -> Iterable[bytes]:
+            body = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width"><title>{escape(meaning["product_name"])}</title>
+<style>body{{margin:0;background:#f5f1e7;color:#14231d;font-family:system-ui,sans-serif}}
+main{{width:min(900px,calc(100% - 40px));margin:auto;padding:12vh 0}}
+h1{{font-size:clamp(4rem,10vw,8rem);line-height:.88;letter-spacing:-.07em}}
+p{{font-size:1.3rem;line-height:1.6;max-width:650px}}</style></head><body><main>
+<small>EXECUTABLE MEANING PROJECTION</small><h1>{escape(meaning["headline"])}</h1>
+<p>{escape(meaning["value_proposition"])}</p></main></body></html>""".encode()
+            start_response(
+                "200 OK",
+                [
+                    ("Content-Type", "text/html; charset=utf-8"),
+                    ("Content-Length", str(len(body))),
+                ],
+            )
+            return [body]
+
+        return brief_application
     create_application = module.create_application
     return cast(Application, create_application(root / ".dodai/demo/registrations.json"))
 
 
-def _guardrail_demonstration(root: Path) -> tuple[str, str]:
+def _guardrail_demonstration(root: Path) -> tuple[str, str, str | None]:
     with tempfile.TemporaryDirectory(prefix="dodai-showcase-") as directory:
         isolated = Path(directory)
         shutil.copytree(root / "origin", isolated / "origin")
         telemetry = root / "examples/telemetry/guardrail-breach.yaml"
         result = evaluate_telemetry(isolated, telemetry)
         if result.proposal_path is None:
-            return result.reason, "No proposal was produced."
+            return result.reason, "No proposal was produced.", None
         proposal = _mapping(result.proposal_path)["proposed_test_specification"]
+        candidate = candidate_from_proposal(root, result.proposal_path)
         action = result.action.replace("_", " ")
-        return result.reason, f"{action}: {proposal['id']} — {proposal['then']}"
+        return (
+            result.reason,
+            f"{action}: {proposal['id']} — {proposal['then']}",
+            candidate.candidate_id if candidate.valid else None,
+        )
 
 
 def _serve_projection(
@@ -69,7 +111,7 @@ def _serve_projection(
     return [body]
 
 
-def _render_showcase(root: Path, outcome: tuple[str, str] | None = None) -> str:
+def _render_showcase(root: Path, outcome: tuple[str, str, str | None] | None = None) -> str:
     manifest = _mapping(root / "projections/manifest.yaml")
     cache_path = root / ".dodai/cache" / f"{manifest['origin_digest']}.yaml"
     semantic = _mapping(cache_path)
@@ -78,6 +120,13 @@ def _render_showcase(root: Path, outcome: tuple[str, str] | None = None) -> str:
     developer_files = [path for path in projection_files if str(path).startswith("developer/")]
     result = ""
     if outcome:
+        adoption = ""
+        if outcome[2]:
+            adoption = f"""
+            <form method="post" action="/candidate/approve">
+              <input type="hidden" name="candidate_id" value="{outcome[2]}">
+              <button type="submit">Adopt as layer-four verification →</button>
+            </form>"""
         result = f"""
         <section class="result" id="result" aria-live="polite">
           <div><span class="result-label">Observed telemetry</span>
@@ -86,6 +135,7 @@ def _render_showcase(root: Path, outcome: tuple[str, str] | None = None) -> str:
             <strong>{escape(outcome[1])}</strong></div>
           <p>The demonstration ran in an isolated copy.
             The authoritative origin stayed unchanged.</p>
+          {adoption}
         </section>"""
     return f"""<!doctype html>
 <html lang="en">
@@ -150,7 +200,8 @@ def _render_showcase(root: Path, outcome: tuple[str, str] | None = None) -> str:
 </head>
 <body>
   <header><span class="brand">dodai / 土台</span>
-    <span class="verified">Repository aligned</span></header>
+    <span><a href="/workbench">Origin workbench</a> ·
+      <span class="verified">Repository aligned</span></span></header>
   <main>
     <section class="hero">
       <div><span class="kicker">Origin-driven development</span>
@@ -199,7 +250,107 @@ def _render_showcase(root: Path, outcome: tuple[str, str] | None = None) -> str:
 </html>"""
 
 
-def create_showcase_application(root: Path) -> Application:
+def _read_form(environ: dict[str, Any]) -> dict[str, str]:
+    length = int(environ.get("CONTENT_LENGTH") or 0)
+    payload = environ["wsgi.input"].read(length).decode("utf-8")
+    return {key: values[0] for key, values in parse_qs(payload).items()}
+
+
+def _render_workbench(
+    root: Path,
+    candidate: CandidateRevision | None = None,
+    *,
+    layer_file: str = "02-user-stories.yaml",
+    message: str = "",
+    history_path: Path | None = None,
+) -> str:
+    layer_file = candidate.layer_file if candidate else layer_file
+    source = candidate.proposed_text if candidate else (root / "origin" / layer_file).read_text()
+    layer_labels = {
+        "01-definitions.yaml": "01 · Definitions",
+        "02-user-stories.yaml": "02 · User stories",
+        "03-acceptance-criteria.yaml": "03 · Acceptance criteria",
+        "04-test-specifications.yaml": "04 · Test specifications",
+    }
+    layer_links = "".join(
+        f'<a href="/workbench?layer={name}">{label}</a>' for name, label in layer_labels.items()
+    )
+    impact = ""
+    if candidate:
+        records = "".join(f"<li>{escape(item)}</li>" for item in candidate.affected_records)
+        projections = "".join(f"<li>{escape(item)}</li>" for item in candidate.affected_projections)
+        issues = (
+            candidate.errors
+            + candidate.warnings
+            + [f"Repeats disproven approach: {bet}" for bet in candidate.blocked_by_losing_records]
+        )
+        issue_html = "".join(f"<li>{escape(item)}</li>" for item in issues)
+        controls = ""
+        if candidate.valid:
+            controls = f"""
+            <form method="post" action="/candidate/approve">
+              <input type="hidden" name="candidate_id" value="{candidate.candidate_id}">
+              <button type="submit">Approve and regenerate →</button>
+            </form>"""
+        issue_section = (
+            f'<div class="issues"><h3>Cannot approve</h3><ul>{issue_html}</ul></div>'
+            if issues
+            else ""
+        )
+        impact = f"""
+        <section class="impact"><h2>Candidate impact</h2>
+          <div><h3>Origin records</h3><ul>{records}</ul></div>
+          <div><h3>Active projections</h3><ul>{projections}</ul></div>
+          {issue_section}
+          {controls}
+        </section>"""
+    history = ""
+    if history_path:
+        history = f"""<section class="history"><h2>Change history</h2>
+          <p>{escape(history_path.relative_to(root).as_posix())}</p></section>"""
+    return f"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>dodai — Origin workbench</title><style>
+:root {{ --ink:#14231d; --paper:#f5f1e7; --lime:#c9ff5b; }} * {{ box-sizing:border-box; }}
+body {{ margin:0; background:var(--paper); color:var(--ink);
+  font-family:Inter,system-ui,sans-serif; }}
+main {{ width:min(1180px,calc(100% - 40px)); margin:auto; padding:32px 0 60px; }}
+nav {{ display:flex; justify-content:space-between; border-bottom:1px solid #aaa;
+  padding-bottom:22px; }}
+h1 {{ font-size:clamp(3rem,7vw,6rem); letter-spacing:-.07em; line-height:.9; margin:60px 0 20px; }}
+.lede {{ max-width:700px; color:#56635d; font-size:1.15rem; }}
+.editor {{ display:grid; grid-template-columns:1fr 2fr; gap:24px; margin-top:42px; }}
+.layers, .panel, .impact, .history {{ border:1px solid var(--ink); padding:24px;
+  background:#faf7ef; }}
+.layers strong {{ display:block; margin-bottom:18px; }}
+.layers a {{ display:block; padding:10px 0; color:var(--ink); }}
+textarea {{ width:100%; min-height:520px; background:#10221a; color:#eaffde; padding:20px;
+  border:0; font:13px/1.55 ui-monospace,monospace; tab-size:2; }}
+button {{ border:0; background:var(--lime); color:var(--ink); padding:15px 18px;
+  font:inherit; font-weight:850; cursor:pointer; }}
+.impact {{ margin-top:24px; display:grid; grid-template-columns:1fr 1fr; gap:20px; }}
+.impact h2, .impact form, .issues {{ grid-column:1/-1; }}
+.message {{ background:var(--lime); padding:16px; }}
+@media(max-width:760px) {{ .editor,.impact {{ grid-template-columns:1fr; }}
+  textarea {{ min-height:420px; }} }}
+</style></head><body><main><nav><strong>dodai / origin workbench</strong>
+<a href="/">Showcase</a></nav>
+<h1>Change intent.<br>See consequences.</h1>
+<p class="lede">The current origin remains authoritative until a complete candidate is valid
+and explicitly approved. Approval regenerates every active projection as one governed change.</p>
+{f'<p class="message">{escape(message)}</p>' if message else ""}
+<section class="editor"><aside class="layers"><strong>Four origin layers</strong>
+{layer_links}</aside>
+<form class="panel" method="post" action="/candidate">
+<input type="hidden" name="layer_file" value="{escape(layer_file)}">
+<textarea name="proposed_text" aria-label="Candidate origin text">{escape(source)}</textarea>
+<p><button type="submit">Preview complete impact →</button></p></form></section>
+{impact}{history}</main></body></html>"""
+
+
+def create_showcase_application(
+    root: Path, *, provider_factory: ProviderFactory = OpenAIContentProvider
+) -> Application:
     root = root.resolve()
     projection = _projection_application(root)
 
@@ -207,6 +358,42 @@ def create_showcase_application(root: Path) -> Application:
         path = str(environ.get("PATH_INFO", "/"))
         if path == "/projection":
             return _serve_projection(projection, environ, start_response)
+        workbench = None
+        workbench_status = "200 OK"
+        if path == "/workbench" and environ.get("REQUEST_METHOD", "GET").upper() == "GET":
+            query = parse_qs(str(environ.get("QUERY_STRING", "")))
+            selected_layer = query.get("layer", ["02-user-stories.yaml"])[0]
+            if selected_layer not in LAYER_COLLECTIONS:
+                selected_layer = "02-user-stories.yaml"
+            workbench = _render_workbench(root, layer_file=selected_layer)
+        elif path == "/candidate" and environ.get("REQUEST_METHOD") == "POST":
+            form = _read_form(environ)
+            candidate = prepare_candidate(root, form["layer_file"], form["proposed_text"])
+            workbench = _render_workbench(root, candidate)
+        elif path == "/candidate/approve" and environ.get("REQUEST_METHOD") == "POST":
+            form = _read_form(environ)
+            try:
+                result = approve_candidate(
+                    root, form["candidate_id"], provider_factory(), approved_by="local human"
+                )
+            except Exception:
+                workbench_status = "422 Unprocessable Entity"
+                workbench = _render_workbench(
+                    root, message="Approval failed; the authoritative origin is unchanged."
+                )
+            else:
+                workbench = _render_workbench(
+                    root,
+                    message="Revision approved and every projection regenerated.",
+                    history_path=result.history_path,
+                )
+        if workbench is not None:
+            body = workbench.encode("utf-8")
+            start_response(
+                workbench_status,
+                [("Content-Type", "text/html; charset=utf-8"), ("Content-Length", str(len(body)))],
+            )
+            return [body]
         outcome = None
         if path == "/guardrail" and environ.get("REQUEST_METHOD", "GET").upper() == "POST":
             outcome = _guardrail_demonstration(root)

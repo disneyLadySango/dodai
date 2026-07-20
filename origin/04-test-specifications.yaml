@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 4
   name: test_specifications
-revision: 1
+revision: 2
 specifications:
   - id: spec_origin_change_reaches_all_projections
     verifies: [ac_complete_regeneration]
@@ -39,6 +39,46 @@ specifications:
     given: A valid origin and its complete current projection set.
     when: All projections are discarded, regenerated from the origin, and compared with the prior behavior.
     then: The result reports agreement or identifies each observable mismatch.
+  - id: spec_candidate_impact_is_visible
+    verifies: [ac_change_impact_visible]
+    given: A valid current origin, its active projections, and a candidate revision to one origin statement.
+    when: The candidate revision is inspected before approval.
+    then: Every downstream origin record and active projection that may change is identified separately from those that remain unaffected.
+  - id: spec_candidate_is_atomic
+    verifies: [ac_change_preview_and_approval]
+    given: A valid current origin and a candidate revision with its complete projected consequences.
+    when: The person approves or rejects the candidate revision.
+    then: Approval makes the complete revision authoritative once, while rejection leaves the current origin and projections observably unchanged.
+  - id: spec_approved_change_is_traceable
+    verifies: [ac_approved_change_history]
+    given: An approved origin revision and its completed regeneration.
+    when: A person reviews the change history.
+    then: The prior and current meaning, validation outcome, resulting projection identity, and approval are presented as one connected change.
+  - id: spec_guardrail_proposal_can_be_adopted
+    verifies: [ac_guardrail_proposal_adoption]
+    given: A proposal produced from evidence that breached an active guardrail without reaching an exit condition.
+    when: The person adopts the proposal.
+    then: The proposed verification becomes authoritative, the affected user story and acceptance criterion remain unchanged, and the complete origin remains valid.
+  - id: spec_losing_record_blocks_repetition
+    verifies: [ac_losing_record_guides_proposals]
+    given: A user story with a losing record and a later candidate that repeats the disproven approach.
+    when: The candidate is evaluated for approval.
+    then: The repeated approach and its prior evidence are reported, and the candidate is not presented as a viable change.
+  - id: spec_pin_and_origin_changes_are_attributed
+    verifies: [ac_pin_change_attribution]
+    given: An approved origin, active projections, and projection-side stabilization decisions.
+    when: Product intent or a stabilization decision changes and regeneration is compared.
+    then: Each observable projection change is attributed to the changed origin meaning or to the changed stabilization decision.
+  - id: spec_underivable_projection_is_rejected
+    verifies: [ac_projection_derivability_gate]
+    given: A candidate projection change with no supporting approved origin revision and no explicit projection-side decision.
+    when: The candidate is evaluated for acceptance.
+    then: The unsupported meaning or behavior is identified and the candidate does not replace the accepted projection.
+  - id: spec_second_product_uses_same_discipline
+    verifies: [ac_reusable_origin_discipline]
+    given: Two valid origins that use different business language and describe different minimal product journeys.
+    when: Each origin is validated, revised, and projected for its active roles.
+    then: Each journey remains isolated and complete without product-specific changes to dodai.
   - id: spec_regeneration_stays_within_budget
     verifies: [guardrail_regeneration_budget]
     given: The sample product and documented reference conditions.

@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 3
   name: acceptance_criteria
-revision: 1
+revision: 2
 criteria:
   - id: ac_complete_regeneration
     kind: outcome
@@ -28,6 +28,38 @@ criteria:
     kind: outcome
     supports: [story_authority_drift, story_failure_diagnosis]
     statement: A person can discard all projections, regenerate them from the origin, and observe whether their behavior differs from the prior projections.
+  - id: ac_change_impact_visible
+    kind: outcome
+    supports: [story_safe_origin_evolution, story_authority_drift]
+    statement: Before a candidate revision becomes authoritative, a person can identify every origin record and active projection whose meaning or observable behavior may be affected.
+  - id: ac_change_preview_and_approval
+    kind: outcome
+    supports: [story_safe_origin_evolution, story_authority_drift]
+    statement: A person can compare the complete consequences of a candidate revision with the current origin, then approve or reject it without a partial change becoming authoritative.
+  - id: ac_approved_change_history
+    kind: outcome
+    supports: [story_safe_origin_evolution, story_failure_diagnosis]
+    statement: Each approved origin revision remains connected to the prior meaning, validation outcome, resulting projection identity, and human approval.
+  - id: ac_guardrail_proposal_adoption
+    kind: outcome
+    supports: [story_failure_diagnosis, story_retained_product_learning]
+    statement: A person can adopt a guardrail-breach proposal as revised verification while the supported user story and acceptance criterion remain unchanged.
+  - id: ac_losing_record_guides_proposals
+    kind: outcome
+    supports: [story_failure_diagnosis, story_retained_product_learning]
+    statement: A disproven approach recorded in a user story is detected and excluded when later verification or projection changes would repeat it.
+  - id: ac_pin_change_attribution
+    kind: outcome
+    supports: [story_safe_origin_evolution, story_method_micromanagement]
+    statement: A person can distinguish a change in product intent from a projection-side stabilization decision and identify which one caused a projection change.
+  - id: ac_projection_derivability_gate
+    kind: outcome
+    supports: [story_safe_origin_evolution, story_authority_drift]
+    statement: A projection change that cannot be traced to approved origin intent or an explicit projection-side decision is detected and prevented from becoming the accepted projection.
+  - id: ac_reusable_origin_discipline
+    kind: outcome
+    supports: [story_reusable_origin_discipline, story_repeated_translation]
+    statement: The same origin discipline can validate, evolve, and project a second product intent with different business language without product-specific changes to dodai.
   - id: guardrail_regeneration_budget
     kind: guardrail
     supports: [ac_complete_regeneration]

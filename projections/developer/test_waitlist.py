@@ -3,7 +3,7 @@ from pathlib import Path
 from urllib.parse import urlencode
 
 import pytest
-from waitlist import create_application, register
+from waitlist import HEADLINE, create_application, register
 
 
 def request(application, method: str = "GET", email: str = "") -> tuple[str, str]:
@@ -38,7 +38,7 @@ def test_browser_journey_explains_registration_outcomes(tmp_path: Path) -> None:
 
     status, page = request(application)
     assert status == "200 OK"
-    assert "One origin. Every projection. Less drift." in page
+    assert HEADLINE in page
 
     status, page = request(application, "POST", "person@example.com")
     assert status == "201 Created"

@@ -38,6 +38,14 @@ lost bet so the same disproven approach is not proposed again. A rebuild test
 discards projections, regenerates them from the origin, and exposes decisions
 that leaked outside the authoritative intent.
 
+The origin workbench makes this discipline operational. A person can edit any
+of the four layers, validate a candidate without changing the authoritative
+origin, inspect every affected record and projection, and explicitly approve or
+reject the complete change. Approval regenerates all active projections and
+records the connected decision history. Failed or stale candidates cannot
+partially change the origin. Projection pins are attributed separately, and
+`dodai init` applies the same discipline to a second product intent.
+
 ## How Codex was used
 
 The human owner defined the business problem, language boundaries, user pains,
@@ -54,8 +62,9 @@ dodai calls the OpenAI Responses API with `gpt-5.6` and strict structured
 output. GPT-5.6 translates the complete origin and projection pins into
 role-neutral product meaning: audience, promise, value proposition, action, and
 stakeholder summary. The committed semantic bundle and generated waitlist
-projections were produced by one verified live GPT-5.6 request. Tests and demos
-reuse that approved bundle and do not spend additional model tokens.
+projections were produced by verified live GPT-5.6 requests: the initial
+vertical slice and one approved origin evolution. Tests and demos reuse the
+active approved bundle and do not spend additional model tokens.
 
 ## Judge testing instructions
 
@@ -75,9 +84,11 @@ bash scripts/demo-web.sh
 ```
 
 Then open <http://127.0.0.1:8000>. The first screen explains the repository-backed
-origin-to-projection lineage. Run the isolated guardrail scenario, then open the
-generated product and submit a valid email. Repeat it to see duplicate handling,
-and try an invalid value. Registrations remain local and survive server restarts.
+origin-to-projection lineage. Open the origin workbench to inspect all four
+layers and preview a candidate impact. Run the isolated guardrail scenario and
+review its layer-four adoption path, then open the generated product and submit
+a valid email. Repeat it to see duplicate handling, and try an invalid value.
+Registrations remain local and survive server restarts.
 
 For the complete verification suite:
 
