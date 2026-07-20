@@ -6,9 +6,9 @@ Product managers and engineers who delegate implementation to AI agents.
 
 ## Promise
 
-**Keep product intent and delegated work aligned.**
+**Delegate implementation without losing product intent.**
 
-Use one authoritative origin to produce stable developer and stakeholder projections, reveal change consequences, and keep approval with people.
+Keep product intent, verification, behavior, and stakeholder meaning aligned—without micromanaging technical methods or repeating the same translation for every audience.
 
 ## Journey
 
@@ -18,4 +18,4 @@ recognized without creating a duplicate.
 
 ## Why this projection exists
 
-A minimal waitlist journey where visitors understand dodai’s value, join the waitlist, and remain registered after restart.
+Visitors can understand dodai’s value and join the waitlist. Their registration remains in place after restart.

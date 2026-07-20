@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import textwrap
 from dataclasses import asdict, dataclass
 from hashlib import sha256
@@ -12,7 +13,7 @@ from openai import OpenAI
 
 from dodai.origin import load_origin, validate_origin
 
-RENDERER_VERSION = "3"
+RENDERER_VERSION = "5"
 DEFAULT_MODEL = "gpt-5.6"
 
 
@@ -40,7 +41,7 @@ class ProjectionResult:
 class OpenAIContentProvider:
     def __init__(self, model: str = DEFAULT_MODEL, client: OpenAI | None = None) -> None:
         self.model = model
-        self.client = client or OpenAI()
+        self.client = client
 
     def derive(self, origin_text: str) -> ProjectionContent:
         schema = {
@@ -51,12 +52,14 @@ class OpenAIContentProvider:
             "required": list(ProjectionContent.__dataclass_fields__),
             "additionalProperties": False,
         }
-        response = self.client.responses.create(
+        client = self.client or OpenAI()
+        response = client.responses.create(
             model=self.model,
             reasoning={"effort": "medium"},
             instructions=(
                 "Derive concise product content for the pinned minimal waitlist journey. "
-                "Honor the origin vocabulary and outcomes. Do not introduce capabilities."
+                "Honor the origin vocabulary and outcomes. Do not introduce capabilities. "
+                "Write in the primary human language used by the product intent."
             ),
             input=origin_text,
             text={
@@ -76,19 +79,27 @@ class SampleContentProvider:
     """Provides an inspectable keyless path for tests and judge evaluation."""
 
     def derive(self, origin_text: str) -> ProjectionContent:
+        def source_value(key: str, default: str) -> str:
+            match = re.search(rf"^\s*{re.escape(key)}:\s*(.+)$", origin_text, re.MULTILINE)
+            if match is None:
+                return default
+            value = yaml.safe_load(match.group(1))
+            return str(value) if value is not None else default
+
+        product_name = source_value("product_name", source_value("origin", "Sample product"))
+        audience = source_value("who", "People accountable for the declared outcome")
+        outcome = source_value(
+            "statement", "The person can complete the declared minimal product journey."
+        )
+        journey = source_value("journey", outcome)
+        japanese = re.search(r"[\u3040-\u30ff\u3400-\u9fff]", f"{audience} {outcome} {journey}")
         return ProjectionContent(
-            product_name="dodai Early Access",
-            audience="Product managers and engineers delegating implementation to AI agents",
-            headline="Keep product intent and delivery on the same foundation",
-            value_proposition=(
-                "Join the waitlist to explore origin-driven delivery without "
-                "technical micromanagement."
-            ),
-            call_to_action="Join the waitlist",
-            stakeholder_summary=(
-                "This waitlist journey demonstrates that one origin can produce aligned executable "
-                "behavior, verification, and stakeholder communication."
-            ),
+            product_name=product_name,
+            audience=audience,
+            headline=outcome,
+            value_proposition=journey,
+            call_to_action="参加意思を残す" if japanese else "Join the waitlist",
+            stakeholder_summary=f"{audience}: {journey}",
         )
 
 
@@ -127,6 +138,15 @@ class ProjectionEngine:
         cache_path = self.root / ".dodai" / "cache" / f"{digest}.yaml"
         if cache_path.exists() and not refresh:
             content = ProjectionContent(**yaml.safe_load(cache_path.read_text(encoding="utf-8")))
+        elif not refresh and (
+            migrated := self._migrate_approved_content(origin_digest, pin_digest)
+        ):
+            content = migrated
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            cache_path.write_text(
+                yaml.safe_dump(asdict(content), sort_keys=True, allow_unicode=True),
+                encoding="utf-8",
+            )
         else:
             content = self.provider.derive(source)
             cache_path.parent.mkdir(parents=True, exist_ok=True)
@@ -153,6 +173,25 @@ class ProjectionEngine:
         after = {path: body.encode() for path, body in rendered.items()}
         return ProjectionResult(digest=digest, changed=before != after, files=sorted(rendered))
 
+    def _migrate_approved_content(
+        self, origin_digest: str, pin_digest: str
+    ) -> ProjectionContent | None:
+        manifest_path = self.root / "projections/manifest.yaml"
+        if not manifest_path.exists():
+            return None
+        manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+        if not isinstance(manifest, dict):
+            return None
+        if (
+            manifest.get("origin_source_digest") != origin_digest
+            or manifest.get("pin_digest") != pin_digest
+        ):
+            return None
+        previous = self.root / ".dodai/cache" / f"{manifest.get('origin_digest', '')}.yaml"
+        if not previous.exists():
+            return None
+        return ProjectionContent(**yaml.safe_load(previous.read_text(encoding="utf-8")))
+
 
 def _render(
     content: ProjectionContent,
@@ -169,6 +208,45 @@ def _render(
     headline = _python_assignment("HEADLINE", content.headline)
     value_proposition = _python_assignment("VALUE_PROPOSITION", content.value_proposition)
     call_to_action = _python_assignment("CALL_TO_ACTION", content.call_to_action)
+    japanese = (
+        re.search(
+            r"[\u3040-\u30ff\u3400-\u9fff]",
+            " ".join((content.headline, content.value_proposition, content.call_to_action)),
+        )
+        is not None
+    )
+    labels = (
+        {
+            "html_language": "ja",
+            "status": "原点と整合済み",
+            "eyebrow": "原点駆動開発",
+            "card_title": "意図から始める。",
+            "card_text": "落ち着いてソフトウェア開発を委譲する体験へ参加してください。",
+            "email_label": "メールアドレス",
+            "email_placeholder": "you@example.com",
+            "invalid": "有効なメールアドレスを入力してください。",
+            "created": "参加を受け付けました。後ほどご連絡します。",
+            "duplicate": "すでに参加済みです。登録は保持されています。",
+            "footer": "1つの原点・複数の射影",
+        }
+        if japanese
+        else {
+            "html_language": "en",
+            "status": "Origin aligned",
+            "eyebrow": "Origin-driven development",
+            "card_title": "Build from intent.",
+            "card_text": "Get early access to a calmer way of delegating software delivery.",
+            "email_label": "Work email",
+            "email_placeholder": "you@company.com",
+            "invalid": "Enter a valid email address.",
+            "created": "You're on the list. We'll be in touch.",
+            "duplicate": "You're already on the list—your place is saved.",
+            "footer": "One origin · Multiple projections",
+        }
+    )
+    label_assignments = "\n".join(
+        _python_assignment(name.upper(), value) for name, value in labels.items()
+    )
     app_template = '''"""Generated waitlist projection. Regenerate instead of editing."""
 
 from __future__ import annotations
@@ -185,12 +263,13 @@ __PRODUCT_NAME__
 __HEADLINE__
 __VALUE_PROPOSITION__
 __CALL_TO_ACTION__
+__LABEL_ASSIGNMENTS__
 
 
 def register(email: str, records_path: Path) -> bool:
     normalized = email.strip().lower()
     if re.fullmatch(r"[^@\\s]+@[^@\\s]+\\.[^@\\s]+", normalized) is None:
-        raise ValueError("Enter a valid email address.")
+        raise ValueError(INVALID)
     records = json.loads(records_path.read_text()) if records_path.exists() else []
     if normalized in records:
         return False
@@ -208,7 +287,7 @@ def render_page(message: str = "", kind: str = "") -> str:
             f"{escape(message)}</p>"
         )
     return f"""<!doctype html>
-<html lang="en">
+<html lang="{escape(HTML_LANGUAGE)}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -263,18 +342,18 @@ def render_page(message: str = "", kind: str = "") -> str:
 <body>
   <main>
     <nav><span class="brand">{escape(PRODUCT_NAME)}</span>
-      <span class="status">Origin aligned</span></nav>
+      <span class="status">{escape(STATUS)}</span></nav>
     <section class="hero">
-      <div><span class="eyebrow">Origin-driven development</span>
+      <div><span class="eyebrow">{escape(EYEBROW)}</span>
         <h1>{escape(HEADLINE)}</h1><p class="lede">{escape(VALUE_PROPOSITION)}</p></div>
-      <aside class="card"><h2>Build from intent.</h2>
-        <p>Get early access to a calmer way of delegating software delivery.</p>
-        <form method="post" action="/"><label for="email">Work email</label>
-          <input id="email" name="email" type="email" placeholder="you@company.com"
+      <aside class="card"><h2>{escape(CARD_TITLE)}</h2>
+        <p>{escape(CARD_TEXT)}</p>
+        <form method="post" action="/"><label for="email">{escape(EMAIL_LABEL)}</label>
+          <input id="email" name="email" type="email" placeholder="{escape(EMAIL_PLACEHOLDER)}"
             autocomplete="email" required><button type="submit">{escape(CALL_TO_ACTION)}</button>
         </form>{notice}</aside>
     </section>
-    <footer><span>One origin · Multiple projections</span><span>Built with GPT-5.6</span></footer>
+    <footer><span>{escape(FOOTER)}</span><span>Generated from approved origin</span></footer>
   </main>
 </body>
 </html>"""
@@ -295,9 +374,9 @@ def create_application(records_path: Path):
                 status, message, kind = "400 Bad Request", str(error), "error"
             else:
                 if created:
-                    status, message = "201 Created", "You're on the list. We'll be in touch."
+                    status, message = "201 Created", CREATED
                 else:
-                    message = "You're already on the list—your place is saved."
+                    message = DUPLICATE
         body = render_page(message, kind).encode("utf-8")
         start_response(
             status,
@@ -331,13 +410,15 @@ if __name__ == "__main__":
         .replace("__HEADLINE__", headline)
         .replace("__VALUE_PROPOSITION__", value_proposition)
         .replace("__CALL_TO_ACTION__", call_to_action)
+        .replace("__LABEL_ASSIGNMENTS__", label_assignments)
     )
-    test = """from io import BytesIO
+    test = """from html import escape
+from io import BytesIO
 from pathlib import Path
 from urllib.parse import urlencode
 
 import pytest
-from waitlist import HEADLINE, create_application, register
+from waitlist import CREATED, DUPLICATE, HEADLINE, INVALID, create_application, register
 
 
 def request(application, method: str = "GET", email: str = "") -> tuple[str, str]:
@@ -363,7 +444,7 @@ def test_registration_survives_a_new_call(tmp_path: Path) -> None:
 
 
 def test_invalid_email_is_rejected(tmp_path: Path) -> None:
-    with pytest.raises(ValueError, match="valid email"):
+    with pytest.raises(ValueError, match=INVALID):
         register("not-an-email", tmp_path / "registrations.json")
 
 
@@ -376,15 +457,15 @@ def test_browser_journey_explains_registration_outcomes(tmp_path: Path) -> None:
 
     status, page = request(application, "POST", "person@example.com")
     assert status == "201 Created"
-    assert "on the list" in page
+    assert escape(CREATED) in page
 
     status, page = request(application, "POST", "person@example.com")
     assert status == "200 OK"
-    assert "already on the list" in page
+    assert escape(DUPLICATE) in page
 
     status, page = request(application, "POST", "not-an-email")
     assert status == "400 Bad Request"
-    assert "valid email" in page
+    assert escape(INVALID) in page
 """
     brief = f"""# {content.product_name}
 

@@ -11,18 +11,30 @@ from urllib.parse import parse_qs
 from wsgiref.simple_server import make_server
 
 PRODUCT_NAME = "dodai"
-HEADLINE = "Keep product intent and delegated work aligned."
+HEADLINE = "Delegate implementation without losing product intent."
 VALUE_PROPOSITION = (
-    "Use one authoritative origin to produce stable developer and stakeholder"
-    + " projections, reveal change consequences, and keep approval with people."
+    "Keep product intent, verification, behavior, and stakeholder meaning "
+    + "aligned—without micromanaging technical methods or repeating the same "
+    + "translation for every audience."
 )
 CALL_TO_ACTION = "Join the waitlist"
+HTML_LANGUAGE = "en"
+STATUS = "Origin aligned"
+EYEBROW = "Origin-driven development"
+CARD_TITLE = "Build from intent."
+CARD_TEXT = "Get early access to a calmer way of delegating software delivery."
+EMAIL_LABEL = "Work email"
+EMAIL_PLACEHOLDER = "you@company.com"
+INVALID = "Enter a valid email address."
+CREATED = "You're on the list. We'll be in touch."
+DUPLICATE = "You're already on the list—your place is saved."
+FOOTER = "One origin · Multiple projections"
 
 
 def register(email: str, records_path: Path) -> bool:
     normalized = email.strip().lower()
     if re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", normalized) is None:
-        raise ValueError("Enter a valid email address.")
+        raise ValueError(INVALID)
     records = json.loads(records_path.read_text()) if records_path.exists() else []
     if normalized in records:
         return False
@@ -40,7 +52,7 @@ def render_page(message: str = "", kind: str = "") -> str:
             f"{escape(message)}</p>"
         )
     return f"""<!doctype html>
-<html lang="en">
+<html lang="{escape(HTML_LANGUAGE)}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -95,18 +107,18 @@ def render_page(message: str = "", kind: str = "") -> str:
 <body>
   <main>
     <nav><span class="brand">{escape(PRODUCT_NAME)}</span>
-      <span class="status">Origin aligned</span></nav>
+      <span class="status">{escape(STATUS)}</span></nav>
     <section class="hero">
-      <div><span class="eyebrow">Origin-driven development</span>
+      <div><span class="eyebrow">{escape(EYEBROW)}</span>
         <h1>{escape(HEADLINE)}</h1><p class="lede">{escape(VALUE_PROPOSITION)}</p></div>
-      <aside class="card"><h2>Build from intent.</h2>
-        <p>Get early access to a calmer way of delegating software delivery.</p>
-        <form method="post" action="/"><label for="email">Work email</label>
-          <input id="email" name="email" type="email" placeholder="you@company.com"
+      <aside class="card"><h2>{escape(CARD_TITLE)}</h2>
+        <p>{escape(CARD_TEXT)}</p>
+        <form method="post" action="/"><label for="email">{escape(EMAIL_LABEL)}</label>
+          <input id="email" name="email" type="email" placeholder="{escape(EMAIL_PLACEHOLDER)}"
             autocomplete="email" required><button type="submit">{escape(CALL_TO_ACTION)}</button>
         </form>{notice}</aside>
     </section>
-    <footer><span>One origin · Multiple projections</span><span>Built with GPT-5.6</span></footer>
+    <footer><span>{escape(FOOTER)}</span><span>Generated from approved origin</span></footer>
   </main>
 </body>
 </html>"""
@@ -127,9 +139,9 @@ def create_application(records_path: Path):
                 status, message, kind = "400 Bad Request", str(error), "error"
             else:
                 if created:
-                    status, message = "201 Created", "You're on the list. We'll be in touch."
+                    status, message = "201 Created", CREATED
                 else:
-                    message = "You're already on the list—your place is saved."
+                    message = DUPLICATE
         body = render_page(message, kind).encode("utf-8")
         start_response(
             status,
