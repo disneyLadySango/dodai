@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+import yaml
+
 from dodai.projection import ProjectionContent, ProjectionEngine, SampleContentProvider
 
 
@@ -34,6 +37,33 @@ def test_one_request_creates_both_role_projections(project: Path) -> None:
     assert "def create_application" in generated_app
     assert 'if __name__ == "__main__"' in generated_app
     assert provider.calls == 1
+
+
+def test_projection_rejects_evidence_that_uses_valid_but_unrelated_origin_records(
+    project: Path,
+) -> None:
+    mapping = {
+        "presentations": [
+            {
+                "path": path,
+                "role": role,
+                "story": "story_method_micromanagement",
+                "criterion": "ac_role_projections",
+                "specification": "spec_two_roles_share_one_origin",
+            }
+            for path, role in (
+                ("developer/waitlist.py", "developer"),
+                ("developer/test_waitlist.py", "developer"),
+                ("stakeholder/brief.md", "stakeholder"),
+            )
+        ]
+    }
+    mapping_path = project / "pins/presentation-map.yaml"
+    mapping_path.parent.mkdir(parents=True)
+    mapping_path.write_text(yaml.safe_dump(mapping), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="does not support story"):
+        ProjectionEngine(project, CountingProvider()).project()
 
 
 def test_unchanged_origin_restores_identical_projections_without_model_call(project: Path) -> None:

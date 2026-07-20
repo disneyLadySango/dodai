@@ -78,6 +78,8 @@ def write_presentation_evidence(root: Path, active_files: list[str]) -> Path:
     story_ids = {item["id"] for item in origin.stories}
     criterion_ids = {item["id"] for item in origin.criteria}
     specification_ids = {item["id"] for item in origin.specifications}
+    criteria = {item["id"]: item for item in origin.criteria}
+    specifications = {item["id"]: item for item in origin.specifications}
     presentations: list[dict[str, Any]] = mapping["presentations"]
     mapped_paths = {str(item.get("path", "")) for item in presentations}
     if mapped_paths != set(active_files):
@@ -91,6 +93,15 @@ def write_presentation_evidence(root: Path, active_files: list[str]) -> Path:
             raise ValueError(f"Unknown criterion for presentation {item.get('path')}")
         if item.get("specification") not in specification_ids:
             raise ValueError(f"Unknown specification for presentation {item.get('path')}")
+        if item["story"] not in criteria[item["criterion"]].get("supports", []):
+            raise ValueError(
+                f"Criterion {item['criterion']} does not support story {item['story']}"
+            )
+        if item["criterion"] not in specifications[item["specification"]].get("verifies", []):
+            raise ValueError(
+                f"Specification {item['specification']} does not verify criterion "
+                f"{item['criterion']}"
+            )
 
     destination = root / "projections" / "evidence.yaml"
     destination.write_text(
