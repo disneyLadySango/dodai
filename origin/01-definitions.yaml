@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 1
   name: definitions
-revision: 5
+revision: 6
 terms:
   - id: origin
     definition: The sole authority for product intent and constraints jointly maintained by people and AI agents.
@@ -105,6 +105,18 @@ terms:
     allowed_layers: [1, 2, 3, 4]
   - id: expected_result
     definition: The observable product, verification, or explanation a person receives after an approved action.
+    allowed_layers: [1, 2, 3, 4]
+  - id: delegation_evidence
+    definition: Observable evidence that delegated work preserves approved intent and satisfies or fails its verification.
+    allowed_layers: [1, 2, 3, 4]
+  - id: presentation_evidence
+    definition: An explicit connection from a role-specific presentation to the story, outcome, and verification that justify it.
+    allowed_layers: [1, 2, 3, 4]
+  - id: proof_sample
+    definition: An interchangeable minimal product journey used to demonstrate derivation without defining the product's own value.
+    allowed_layers: [1, 2, 3, 4]
+  - id: failure_layer
+    definition: The highest origin or presentation layer that observed evidence disproves, or an explicit inconclusive result.
     allowed_layers: [1, 2, 3, 4]
 boundary_terms:
   story_solution_vocabulary:
