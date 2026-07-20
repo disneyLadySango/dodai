@@ -81,7 +81,10 @@ def _write_proposal(root: Path, telemetry: dict[str, Any], breached: list[str]) 
 def _append_losing_record(root: Path, telemetry: dict[str, Any]) -> None:
     path = root / "origin" / "02-user-stories.yaml"
     document = _read(path)
-    story = next(item for item in document["stories"] if item["id"] == "story_failure_diagnosis")
+    story = next(
+        (item for item in document["stories"] if "losing_records" in item),
+        document["stories"][0],
+    )
     records = story.setdefault("losing_records", [])
     bet = str(telemetry["bet"])
     evidence = str(telemetry.get("evidence", "Exit telemetry reached the active threshold."))

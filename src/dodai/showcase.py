@@ -21,7 +21,7 @@ from dodai.evolution import (
 )
 from dodai.localization import japanese_catalog, select_language, translated_record
 from dodai.outer_loop import evaluate_telemetry
-from dodai.projection import ContentProvider, OpenAIContentProvider
+from dodai.projection import ContentProvider, OpenAIContentProvider, SampleContentProvider
 
 StartResponse = Callable[[str, list[tuple[str, str]]], Any]
 Application = Callable[[dict[str, Any], StartResponse], Iterable[bytes]]
@@ -492,11 +492,21 @@ def create_showcase_application(
     return application
 
 
-def serve_showcase(root: Path, host: str, port: int) -> None:
+def serve_showcase(root: Path, host: str, port: int, *, sample: bool = False) -> None:
+    from dodai.portal import create_portal_application
+
     url = f"http://{host}:{port}"
     print(f"dodai showcase: {url}")
-    print("No OpenAI API request is made.")
-    with make_server(host, port, create_showcase_application(root)) as server:
+    if sample:
+        print("Sample mode: no OpenAI API request is made.")
+    else:
+        print("GPT-5.6 is called at most once after explicit generation consent.")
+    provider_factory: ProviderFactory = SampleContentProvider if sample else OpenAIContentProvider
+    audit_application = create_showcase_application(root, provider_factory=provider_factory)
+    application = create_portal_application(
+        root, provider_factory=provider_factory, audit_application=audit_application
+    )
+    with make_server(host, port, application) as server:
         try:
             server.serve_forever()
         except KeyboardInterrupt:
