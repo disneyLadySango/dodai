@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 1
   name: definitions
-revision: 3
+revision: 4
 terms:
   - id: origin
     definition: The sole authority for product intent and constraints jointly maintained by people and AI agents.
@@ -81,6 +81,21 @@ terms:
     allowed_layers: [1, 2, 3, 4]
   - id: semantic_equivalence
     definition: Agreement in meaning, consequences, and decisions across presentations of the same authority.
+    allowed_layers: [1, 3, 4]
+  - id: product_bet
+    definition: A bounded attempt to relieve a user pain and achieve declared outcomes.
+    allowed_layers: [1, 2, 3, 4]
+  - id: discovery
+    definition: The process of making an actor, pain, vocabulary, and falsifiable outcomes explicit before choosing technical methods.
+    allowed_layers: [1, 2, 3, 4]
+  - id: generation_plan
+    definition: A reviewable account of the intended projection work, expected model use, and verification before generation begins.
+    allowed_layers: [1, 3, 4]
+  - id: progress
+    definition: The observable current stage, completed decisions, pending decisions, and recoverable failures of a product bet.
+    allowed_layers: [1, 2, 3, 4]
+  - id: learning_decision
+    definition: An evidence-backed choice to continue, revise verification, or end a product bet.
     allowed_layers: [1, 3, 4]
 boundary_terms:
   story_solution_vocabulary:
