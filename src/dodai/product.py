@@ -183,12 +183,14 @@ def record_outcomes(
     *,
     outcome: str,
     journey: str,
-    guardrail_seconds: int = DEFAULT_REGENERATION_SECONDS,
-    exit_revisions: int = DEFAULT_UNSUCCESSFUL_REVISIONS,
+    guardrail_seconds: int | None = None,
+    exit_revisions: int | None = None,
     term_name: str = "",
     term_definition: str = "",
 ) -> ProductBet:
     bet = store.load(project_id)
+    active_guardrail_seconds = guardrail_seconds or bet.guardrail_seconds
+    active_exit_revisions = exit_revisions or bet.exit_revisions
     if not outcome.strip() or not journey.strip():
         raise ValueError("成功した状態と、利用者が最初にして結果を得るまでを入力してください。")
     workspace = store.workspace(project_id)
@@ -264,7 +266,7 @@ def record_outcomes(
                 {
                     "name": "elapsed_time",
                     "comparator": "less_than_or_equal_to",
-                    "threshold": guardrail_seconds,
+                    "threshold": active_guardrail_seconds,
                     "unit": "seconds",
                 },
                 {
@@ -284,7 +286,7 @@ def record_outcomes(
             "measure": {
                 "name": "consecutive_unsuccessful_representation_revisions",
                 "comparator": "greater_than_or_equal_to",
-                "threshold": exit_revisions,
+                "threshold": active_exit_revisions,
                 "unit": "revisions",
             },
         },
@@ -314,8 +316,8 @@ def record_outcomes(
     return store.update(
         project_id,
         outcome=outcome.strip(),
-        guardrail_seconds=guardrail_seconds,
-        exit_revisions=exit_revisions,
+        guardrail_seconds=active_guardrail_seconds,
+        exit_revisions=active_exit_revisions,
         journey=journey.strip(),
         term_name=term_name.strip(),
         term_definition=term_definition.strip(),

@@ -7,6 +7,7 @@ from time import sleep
 from urllib.parse import urlencode
 
 from dodai.portal import create_portal_application
+from dodai.product import ProductStore
 from dodai.projection import ProjectionContent, SampleContentProvider
 
 
@@ -256,6 +257,36 @@ def test_outcome_questions_are_lightweight_and_operational_defaults_are_internal
     ).read_text()
     assert "threshold: 120" in criteria
     assert "threshold: 3" in criteria
+
+
+def test_hidden_operational_conditions_preserve_existing_project_decisions(
+    project: Path,
+) -> None:
+    application = create_portal_application(project)
+    project_id = create_bet(application)
+    request(
+        application,
+        f"/projects/{project_id}/problem",
+        "POST",
+        {"actor": "地域の参加者", "pain": "催しを見逃す"},
+    )
+    ProductStore(project).update(project_id, guardrail_seconds=90, exit_revisions=5)
+
+    request(
+        application,
+        f"/projects/{project_id}/outcomes",
+        "POST",
+        {
+            "outcome": "関心のある催しへ参加意思を残せる。",
+            "journey": "開催情報を見る → 参加を選ぶ → 参加済みだと確認できる",
+        },
+    )
+
+    criteria = (
+        project / ".dodai/workspaces" / project_id / "origin/03-acceptance-criteria.yaml"
+    ).read_text()
+    assert "threshold: 90" in criteria
+    assert "threshold: 5" in criteria
 
 
 def test_generation_requires_consent_and_never_requests_same_identity_twice(
