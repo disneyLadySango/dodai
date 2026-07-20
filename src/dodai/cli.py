@@ -46,6 +46,9 @@ def _parser() -> argparse.ArgumentParser:
     showcase = commands.add_parser("showcase", help="Run the judge-facing browser showcase.")
     showcase.add_argument("--host", default="127.0.0.1")
     showcase.add_argument("--port", type=int, default=8000)
+    showcase.add_argument(
+        "--sample", action="store_true", help="Use inspectable local content without API access."
+    )
     preview = commands.add_parser("preview", help="Preview a candidate origin revision.")
     preview.add_argument("layer_file")
     preview.add_argument("candidate_path", type=Path)
@@ -106,7 +109,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"- {path}")
         return 1
     if args.command == "showcase":
-        serve_showcase(root, args.host, args.port)
+        serve_showcase(root, args.host, args.port, sample=args.sample)
         return 0
     if args.command == "preview":
         candidate = prepare_candidate(

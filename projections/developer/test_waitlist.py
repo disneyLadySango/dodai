@@ -1,9 +1,10 @@
+from html import escape
 from io import BytesIO
 from pathlib import Path
 from urllib.parse import urlencode
 
 import pytest
-from waitlist import HEADLINE, create_application, register
+from waitlist import CREATED, DUPLICATE, HEADLINE, INVALID, create_application, register
 
 
 def request(application, method: str = "GET", email: str = "") -> tuple[str, str]:
@@ -29,7 +30,7 @@ def test_registration_survives_a_new_call(tmp_path: Path) -> None:
 
 
 def test_invalid_email_is_rejected(tmp_path: Path) -> None:
-    with pytest.raises(ValueError, match="valid email"):
+    with pytest.raises(ValueError, match=INVALID):
         register("not-an-email", tmp_path / "registrations.json")
 
 
@@ -42,12 +43,12 @@ def test_browser_journey_explains_registration_outcomes(tmp_path: Path) -> None:
 
     status, page = request(application, "POST", "person@example.com")
     assert status == "201 Created"
-    assert "on the list" in page
+    assert escape(CREATED) in page
 
     status, page = request(application, "POST", "person@example.com")
     assert status == "200 OK"
-    assert "already on the list" in page
+    assert escape(DUPLICATE) in page
 
     status, page = request(application, "POST", "not-an-email")
     assert status == "400 Bad Request"
-    assert "valid email" in page
+    assert escape(INVALID) in page

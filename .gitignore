@@ -24,3 +24,4 @@ __pycache__/
 .dodai/demo/
 .dodai/candidates/
 .dodai/history/
+.dodai/workspaces/

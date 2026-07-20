@@ -85,6 +85,11 @@ records:
   derivability: 射影の意味と振る舞いを原点または明示的ピンへ追跡できる性質。
   presentation_language: 原点・証拠・判断を監査するために選ぶ人間の言語。
   semantic_equivalence: 同じ正本の異なる表現で、意味・影響・判断が一致すること。
+  product_bet: 利用者の痛みを減らし、宣言した成果へ到達するための境界ある試み。
+  discovery: 技術的方法を選ぶ前に、利用者・痛み・語彙・成果を明示する過程。
+  generation_plan: 生成前に確認できる、射影作業・モデル利用・検証の計画。
+  progress: 賭けの現在地、完了判断、次の判断、復旧可能な失敗。
+  learning_decision: 証拠に基づき、続行・検証変更・撤退を選ぶ判断。
   story_authority_drift: 意図・実行・検証・説明がずれ、何が正しい意味か分からなくなる。
   story_method_micromanagement: 技術的方法の指示に時間を奪われ、ビジネス課題へ集中できない。
   story_repeated_translation: 同じ意図を対象者ごとに翻訳し直し、手間と意味の不一致が生じる。
@@ -93,6 +98,13 @@ records:
   story_retained_product_learning: 否定された方法の証拠が後の判断から離れ、同じ失敗を繰り返す。
   story_reusable_origin_discipline: 別の賭けへ適用するたびに、言語・成果基準・説明を作り直す必要がある。
   story_language_barrier: 不慣れな言語だけの表現では直接監査できず、非公式な翻訳へ判断を依存する。
+  story_problem_first_start: 技術成果物から始めると、利用者・痛み・語彙・成果を理解する前に解決方法を選んでしまう。
+  story_delegated_verification: ビジネス成果を検証へ変換する作業が、人間を技術的マイクロマネジメントへ引き戻す。
+  story_visible_journey: 完了判断・承認待ち・生成・失敗が一緒に見えず、次に何をすべきか分からない。
+  story_runnable_result: 生成物をすぐ体験できなければ、プロダクト成果として判断できない。
+  story_predictable_model_use: 予告のない重複モデル利用により、委譲コストが予測不能になる。
+  story_accessible_learning_loop: 内部コマンドや実装知識が必要だと、証拠と学習を判断へ利用できない。
+  story_multiple_product_bets: 案件の一覧と再開状態がなければ、複数の賭けを見つけて継続できない。
   ac_complete_regeneration: 原点への1変更を、1回の操作で全射影へ反映できる。
   ac_stable_regeneration: 原点が同じなら、再射影しても観測可能な差がない。
   ac_role_projections: 同じ原点から、実行可能な開発者向け射影と人間可読な関係者向け射影が得られる。
@@ -109,6 +121,15 @@ records:
   ac_reusable_origin_discipline: 異なる業務語彙の別プロダクトにも、Dodai固有変更なしで適用できる。
   ac_supported_language_audit: 対応言語だけで原点・影響・重要操作を完全に監査できる。
   ac_presentation_language_equivalence: 表示言語を変えても、意味・影響・判断・射影IDは変わらない。
+  ac_guided_origin_creation: 内部表現を編集せず、利用者と痛みから有効な原点第1〜3層へ到達できる。
+  ac_solution_intent_recovery: 解決方法を検出し、正本化する前に意図した成果へ戻せる。
+  ac_verification_delegation: 承認済み成果から完全な検証を提案し、射影前に人間が承認できる。
+  ac_visible_resumable_progress: 全案件の現在地・完了判断・次の判断・失敗を確認して再開できる。
+  ac_generation_consent: モデル利用前に作業・最大回数・費用上限・キャッシュを確認し、一度だけ承認する。
+  ac_no_duplicate_model_use: 原点とピンが同じなら、中断後も外部モデルを再度呼ばない。
+  ac_runnable_projection_journey: 生成直後に動く射影、検証結果、同じ意味の説明を確認できる。
+  ac_plain_language_change_journey: 内部表現を編集せず、自然言語の変更影響を承認して安定再射影できる。
+  ac_accessible_learning_decision: 成果データから続行・検証変更・撤退の理由を得て、学習を賭けへ残せる。
   guardrail_regeneration_budget: 全射影の再生成を対話的に使える時間と費用へ収める。
   exit_origin_representation: 表現改訂を3回続けてもリビルド不一致なら、現在の表現方式を撤退する。
   spec_origin_change_reaches_all_projections: 原点の1文を変え1回再生成すると、全射影へ反映されることを検証する。
@@ -128,5 +149,14 @@ records:
   spec_second_product_uses_same_discipline: 異なる2つの原点を同じ規律で検証・変更・射影できることを検証する。
   spec_supported_language_is_complete: 対応言語だけで4層・変更候補・影響・承認を理解できることを検証する。
   spec_presentation_languages_are_equivalent: 2言語の同じ操作が、同じ影響・検証・判断・原点ID・射影IDになることを検証する。
+  spec_problem_account_reaches_valid_origin: 名前・利用者・痛み・曖昧な語彙から、内部表現を触らず有効な第1〜3層へ到達することを検証する。
+  spec_prescribed_solution_returns_to_intent: Howを検出して意図した成果を問い、ストーリーからHowを除くことを検証する。
+  spec_verification_is_proposed_before_generation: 全ACの検証と影響を提示し、承認前に射影が始まらないことを検証する。
+  spec_product_bets_are_resumable: 複数案件の現在地と次の判断が見え、承認済み判断を繰り返さず再開できることを検証する。
+  spec_generation_requires_informed_consent: 射影・最大API回数・費用上限・キャッシュを示し、承認まで生成しないことを検証する。
+  spec_approved_identity_never_requests_twice: 承認済みの同一意味を再利用し、外部モデルを重複実行しないことを検証する。
+  spec_generated_result_is_immediately_experienced: 動く成果、検証結果、関係者向け説明を同時に確認できることを検証する。
+  spec_plain_language_change_is_governed: 自然言語変更の最上位層と全影響を承認前に示し、一括再射影することを検証する。
+  spec_evidence_produces_explained_learning_decision: 証拠から続行・検証変更・撤退を説明し、学習を次の提案へ残すことを検証する。
   spec_regeneration_stays_within_budget: 再生成の時間と変動費が有効なしきい値以内であることを検証する。
   spec_persistent_mismatch_ends_bet: 不一致改訂数がしきい値へ達したら、別方式の前に現在の賭けを終了することを検証する。

@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 3
   name: acceptance_criteria
-revision: 3
+revision: 4
 criteria:
   - id: ac_complete_regeneration
     kind: outcome
@@ -68,6 +68,42 @@ criteria:
     kind: outcome
     supports: [story_language_barrier, story_authority_drift]
     statement: Changing the presentation language changes no authoritative meaning, identified consequence, decision result, or projection identity.
+  - id: ac_guided_origin_creation
+    kind: outcome
+    supports: [story_problem_first_start, story_method_micromanagement]
+    statement: A person can begin with an account of an actor and pain, resolve ambiguous business language, and reach a valid first three origin layers without editing an internal representation.
+  - id: ac_solution_intent_recovery
+    kind: outcome
+    supports: [story_problem_first_start, story_method_micromanagement]
+    statement: When a person's input prescribes a solution, the prescribed method is identified and the underlying intended outcome is recovered before it becomes authoritative.
+  - id: ac_verification_delegation
+    kind: outcome
+    supports: [story_delegated_verification, story_method_micromanagement]
+    statement: Complete verification is proposed from approved outcomes, with coverage and observable consequences presented for human approval before projection work begins.
+  - id: ac_visible_resumable_progress
+    kind: outcome
+    supports: [story_visible_journey, story_multiple_product_bets]
+    statement: A person can identify every product bet, its current stage, completed decisions, next required decision, and recoverable failure, then resume it without reconstructing prior context.
+  - id: ac_generation_consent
+    kind: outcome
+    supports: [story_predictable_model_use, story_visible_journey]
+    statement: Before external model work begins, a person sees the planned projection work, maximum request count, expected variable cost, and cache status, and explicitly consents once.
+  - id: ac_no_duplicate_model_use
+    kind: outcome
+    supports: [story_predictable_model_use, story_authority_drift]
+    statement: An unchanged approved origin and pins never cause another external model request, including after interruption and resume.
+  - id: ac_runnable_projection_journey
+    kind: outcome
+    supports: [story_runnable_result, story_repeated_translation]
+    statement: After approved generation, a person can immediately experience the developer projection, inspect its verification result, and read the aligned stakeholder meaning from the same product bet.
+  - id: ac_plain_language_change_journey
+    kind: outcome
+    supports: [story_safe_origin_evolution, story_language_barrier]
+    statement: A person can describe a desired change in their working language, review the highest affected origin layer and complete consequences, and approve stable regeneration without editing an internal representation.
+  - id: ac_accessible_learning_decision
+    kind: outcome
+    supports: [story_accessible_learning_loop, story_failure_diagnosis]
+    statement: A person can provide representative outcome evidence and receive an explained continue, revise-verification, or end-bet decision, with approved learning connected to the affected product bet.
   - id: guardrail_regeneration_budget
     kind: guardrail
     supports: [ac_complete_regeneration]

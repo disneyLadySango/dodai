@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 2
   name: user_stories
-revision: 3
+revision: 4
 stories:
   - id: story_authority_drift
     who: A product manager or engineer who delegates implementation to AI agents.
@@ -29,3 +29,24 @@ stories:
   - id: story_language_barrier
     who: A product manager or engineer who audits product intent and delegated work in their working language.
     pain: Meaning presented only in an unfamiliar language prevents direct inspection and makes consequential decisions depend on an informal translation.
+  - id: story_problem_first_start
+    who: A product manager or engineer beginning a product bet with an AI agent.
+    pain: Starting from technical artifacts forces a solution choice before the actor, pain, vocabulary, and desired outcomes are understood.
+  - id: story_delegated_verification
+    who: A product manager or engineer responsible for outcomes but delegating technical methods.
+    pain: Turning business outcomes into verification requires technical specification work that pulls the person back into micromanaging the agent.
+  - id: story_visible_journey
+    who: A product manager or engineer progressing through an agent-led product bet.
+    pain: When completed decisions, pending approvals, generation work, and failures are not visible together, the person cannot tell what to do next or safely resume later.
+  - id: story_runnable_result
+    who: A product manager or engineer evaluating delegated product work.
+    pain: Generated artifacts cannot be judged as a product outcome when the person cannot immediately experience the resulting behavior.
+  - id: story_predictable_model_use
+    who: A person accountable for the cost and external effects of agent-led generation.
+    pain: Unannounced or repeated model use makes the cost of delegation unpredictable and weakens trust in regeneration.
+  - id: story_accessible_learning_loop
+    who: A person accountable for deciding whether a product bet should continue, change verification, or end.
+    pain: Evidence and prior learning remain operationally useless when reaching a learning decision requires internal commands or implementation knowledge.
+  - id: story_multiple_product_bets
+    who: A product manager or engineer responsible for more than one product bet over time.
+    pain: Without a clear inventory and resumable state, separate bets become difficult to find, distinguish, and continue.

@@ -25,6 +25,13 @@ solution-free user stories, falsifiable acceptance criteria, and
 implementation-independent test specifications. A vocabulary linter protects
 the boundaries between those layers.
 
+The product begins with a guided Japanese journey rather than an internal
+specification editor. A product owner names a bet, describes an actor and pain,
+recovers intent when solution vocabulary appears, defines business terms and
+falsifiable outcomes, and approves proposed verification before generation.
+Dodai shows the maximum model-request count, cost guardrail, and cache state
+before explicit consent.
+
 GPT-5.6 performs the judgment-heavy translation from the origin into one
 structured semantic bundle. Deterministic renderers then produce executable
 developer code with behavioral tests and an aligned stakeholder brief. The
@@ -45,6 +52,14 @@ reject the complete change. Approval regenerates all active projections and
 records the connected decision history. Failed or stale candidates cannot
 partially change the origin. Projection pins are attributed separately, and
 `dodai init` applies the same discipline to a second product intent.
+
+After generation, the product owner can immediately operate the generated
+experience, see behavioral verification and stakeholder meaning from the same
+origin, request a plain-language change, inspect its actual affected records and
+projections, and approve or reject atomic regeneration. Outcome evidence
+produces an explained continue, revise-verification, or end-bet decision. Every
+product bet is resumable with its current stage, next decision, failures,
+approvals, and learning history visible.
 
 ## How Codex was used
 
@@ -83,12 +98,16 @@ For the interactive browser showcase:
 bash scripts/demo-web.sh
 ```
 
-Then open <http://127.0.0.1:8000>. The first screen explains the repository-backed
-origin-to-projection lineage. Open the origin workbench to inspect all four
-layers and preview a candidate impact. Run the isolated guardrail scenario and
-review its layer-four adoption path, then open the generated product and submit
-a valid email. Repeat it to see duplicate handling, and try an invalid value.
-Registrations remain local and survive server restarts.
+Then open <http://127.0.0.1:8000>. Create a product bet and complete the guided
+journey through pain, outcomes, verification approval, generation consent, and
+the runnable result. Submit a valid email, repeat it to see duplicate handling,
+and try an invalid value. Request a plain-language change to inspect its impact,
+then enter telemetry to exercise continue, verification-change, and exit
+decisions. Product state and registrations remain local and survive restarts.
+
+`demo-web.sh` uses the inspectable sample provider, so this full journey is
+keyless and makes no API request. Audit mode at `/workbench` exposes the complete
+four-layer source and the repository proof remains at `/proof`.
 
 For the complete verification suite:
 
@@ -102,9 +121,9 @@ uv run dodai --root . rebuild-test
 uv build
 ```
 
-Both demos make no OpenAI API request. The terminal demo and guardrail scenario
-are read-only with respect to the checkout; waitlist registration writes only
-ignored local sample data under `.dodai/demo/`.
+Both demos make no OpenAI API request. The terminal demo is read-only with
+respect to the checkout; browser product state stays in ignored local data under
+`.dodai/workspaces/`.
 
 ## Submission fields still requiring the owner
 

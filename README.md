@@ -8,19 +8,25 @@ product bets.
 
 Built for the OpenAI Build Week 2026 Developer Tools track.
 
-## What the vertical slice demonstrates
+## What the product journey does
 
-The bundled waitlist journey deliberately stays narrow:
+The browser starts from the product manager's work rather than internal origin
+files:
 
-1. Validate the four origin layers and their vocabulary boundaries.
-2. Ask GPT-5.6 to derive one structured semantic content bundle.
-3. Render executable code, behavioral tests, and a stakeholder brief together.
-4. Reuse an origin-addressed approved bundle when the origin is unchanged.
-5. Evaluate simulated telemetry to propose new verification or record a lost bet.
-6. Discard and rebuild projections, then report any leaked decision as a diff.
+1. Name a product bet and describe its actor and pain in Japanese.
+2. Detect prescribed How and recover the intended outcome before it reaches a story.
+3. Define business vocabulary, success, a guardrail, and an exit condition.
+4. Review complete layer-four verification before projection work begins.
+5. Review the model-request maximum, cost guardrail, and cache state, then consent.
+6. Experience executable behavior, behavioral verification, and stakeholder meaning.
+7. Request a plain-language change and approve or reject its complete impact.
+8. Enter outcome evidence and receive a continue, revise-verification, or end-bet decision.
+9. Return later, see each bet's current stage and next decision, and resume safely.
 
 The [origin](origin/README.md) is authoritative. The committed
 [projections](projections/) are disposable evidence of what can be regenerated.
+The complete user journey, trust boundaries, and executable completion evidence
+are mapped in [Product Journey and Completion Evidence](docs/PRODUCT_JOURNEY.md).
 
 ## Requirements
 
@@ -66,38 +72,53 @@ projection reports `stable` without an API request. A new origin digest reports
 and tests live under `projections/developer/`, while the shared stakeholder
 explanation lives under `projections/stakeholder/`.
 
-## Run the browser showcase
+## Run the product
 
-Start the judge-facing showcase with one command:
+Start the complete keyless product journey with one command:
 
 ```bash
 bash scripts/demo-web.sh
 ```
 
-Open <http://127.0.0.1:8000>. The browser explains the live repository-backed
-lineage from four origin layers through the approved GPT-5.6 semantic bundle to
-developer and stakeholder projections. From the same screen, a judge can open
-the generated waitlist or run an isolated guardrail-breach scenario and inspect
-the proposed verification. The scenario never changes the checkout.
+Open <http://127.0.0.1:8000>. Create a product bet and complete the guided flow
+from pain through outcomes, verification approval, informed generation,
+runnable result, governed change, and telemetry learning. `demo-web.sh` uses the
+inspectable sample provider, so the complete journey requires no credential and
+makes no API request. Product-bet state is resumable under ignored
+`.dodai/workspaces/`.
 
-The browser opens in Japanese so the product owner can audit the complete
-four-layer origin directly. Use the `English` / `日本語` control in the header to
-switch presentation language. The language definition is explicitly mapped to
-stable origin record IDs; switching languages does not change impact analysis,
-approval outcomes, origin identity, or projection identity.
+To use GPT-5.6 for newly approved origins, set `OPENAI_API_KEY` in the launching
+environment and run without `--sample`:
 
-![dodai judge-facing origin-to-evidence showcase](docs/assets/showcase.png)
+```bash
+uv run dodai --root . showcase
+```
+
+Dodai shows the maximum external request count, cost guardrail, and cache status
+before consent. A successful approved identity is cached; repeating generation
+for the same origin and pins performs no additional model request.
+The guided local product-bet design and its MVP boundaries are recorded in
+[ADR 0004](docs/adr/0004-guided-local-product-bets.md).
+
+The guided product journey opens in Japanese. Audit mode exposes an
+`English` / `日本語` control so the product owner can inspect the complete
+four-layer origin in either presentation language. The language definition is
+explicitly mapped to stable origin record IDs; switching audit language does
+not change impact analysis, approval outcomes, origin identity, or projection
+identity.
+
+![dodai product-bet workspace](docs/assets/showcase.png)
 
 The generated waitlist supports valid, duplicate, and invalid registration
-feedback and retains registrations across server restarts. Data stays local
-under `.dodai/demo/` and is ignored by Git. The showcase does not call the
-OpenAI API.
+feedback and retains registrations across server restarts. The result screen
+shows behavioral verification and a stakeholder brief beside the runnable
+experience.
 
 ![Generated dodai waitlist browser experience](docs/assets/browser-demo.png)
 
 ## Evolve the origin safely
 
-Open <http://127.0.0.1:8000/workbench> after starting the browser showcase. The
+Open <http://127.0.0.1:8000/workbench> when internal auditing is needed. The
 workbench exposes all four authoritative layers. Editing a layer creates a
 candidate revision: Dodai validates it, reports every affected origin record
 and active projection, and leaves the current origin unchanged.
@@ -107,6 +128,9 @@ it authoritative. A failed regeneration or a stale preview changes nothing.
 Successful approval connects the human decision, before and after origin
 identities, validation, and resulting projection identity in local change
 history. Candidate and history state under `.dodai/` is ignored by Git.
+
+The repository-backed technical proof remains available at
+<http://127.0.0.1:8000/proof>.
 
 ![dodai four-layer origin workbench](docs/assets/origin-workbench.png)
 

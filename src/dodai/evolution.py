@@ -145,6 +145,10 @@ def _load_candidate(root: Path, candidate_id: str) -> CandidateRevision:
     return CandidateRevision(**value)
 
 
+def load_candidate(root: Path, candidate_id: str) -> CandidateRevision:
+    return _load_candidate(root, candidate_id)
+
+
 def prepare_candidate(root: Path, layer_file: str, proposed_text: str) -> CandidateRevision:
     if layer_file not in LAYER_COLLECTIONS:
         raise ValueError(f"Unsupported origin layer: {layer_file}")

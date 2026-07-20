@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 4
   name: test_specifications
-revision: 3
+revision: 4
 specifications:
   - id: spec_origin_change_reaches_all_projections
     verifies: [ac_complete_regeneration]
@@ -89,6 +89,51 @@ specifications:
     given: The same valid origin, evidence, and candidate revision presented in two supported languages.
     when: Equivalent inspection and decision journeys are completed in each language.
     then: Both journeys report the same affected records, validation outcome, decision result, authoritative origin identity, and projection identity.
+  - id: spec_problem_account_reaches_valid_origin
+    verifies: [ac_guided_origin_creation]
+    given: A person has only a product-bet name, an actor, a pain account, and business language that may be ambiguous.
+    when: The person completes the guided discovery and approves the proposed meaning and outcomes.
+    then: The first three origin layers are complete and valid, and the person did not need to inspect or edit their internal representation.
+  - id: spec_prescribed_solution_returns_to_intent
+    verifies: [ac_solution_intent_recovery]
+    given: A discovery response includes declared solution vocabulary or a prescribed technical method.
+    when: The response is evaluated before becoming authoritative.
+    then: The method is identified, the person is asked for the outcome it was intended to achieve, and the method is absent from the resulting user story.
+  - id: spec_verification_is_proposed_before_generation
+    verifies: [ac_verification_delegation]
+    given: Approved outcomes, guardrails, and exit conditions with no approved verification.
+    when: Verification is requested.
+    then: Every active criterion has observable verification, consequences and coverage are presented together, and no projection work begins before explicit approval.
+  - id: spec_product_bets_are_resumable
+    verifies: [ac_visible_resumable_progress]
+    given: Several product bets at different stages, including one interrupted during a recoverable operation.
+    when: A person returns and selects any product bet.
+    then: Its stage, completed decisions, next required decision, and failure recovery are visible and the journey resumes without repeating an approved decision.
+  - id: spec_generation_requires_informed_consent
+    verifies: [ac_generation_consent]
+    given: Approved verification and projections that have not yet been generated for the current origin identity.
+    when: A person reviews the generation plan.
+    then: Intended projection outcomes, maximum external request count, expected variable cost, and cache status are visible, and generation remains stopped until explicit consent.
+  - id: spec_approved_identity_never_requests_twice
+    verifies: [ac_no_duplicate_model_use]
+    given: An approved origin and pins whose semantic meaning has already been derived, including an interrupted later journey.
+    when: Generation or resume is requested again.
+    then: The approved semantic meaning is reused and no additional external model request occurs.
+  - id: spec_generated_result_is_immediately_experienced
+    verifies: [ac_runnable_projection_journey]
+    given: A product bet whose approved origin has completed generation.
+    when: A person reviews the result.
+    then: The developer behavior can be experienced immediately, its verification result is visible, and the stakeholder explanation agrees with the same behavior.
+  - id: spec_plain_language_change_is_governed
+    verifies: [ac_plain_language_change_journey]
+    given: A generated product bet and a desired change described in a supported presentation language.
+    when: The change is prepared and reviewed.
+    then: The highest affected origin layer, changed meaning, downstream records, and projections are presented before approval, and approval regenerates the complete projection set without internal-representation editing.
+  - id: spec_evidence_produces_explained_learning_decision
+    verifies: [ac_accessible_learning_decision]
+    given: Representative outcome evidence for an active product bet.
+    when: A person evaluates the evidence against its outcomes, guardrails, and exit conditions.
+    then: A continue, revise-verification, or end-bet decision is explained; approved verification changes or losing records remain connected to that product bet and guide later proposals.
   - id: spec_regeneration_stays_within_budget
     verifies: [guardrail_regeneration_budget]
     given: The sample product and documented reference conditions.
