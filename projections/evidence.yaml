@@ -1,0 +1,17 @@
+origin: dodai
+presentations:
+- path: developer/waitlist.py
+  role: developer
+  story: story_authority_drift
+  criterion: ac_delegation_evidence
+  specification: spec_delegation_result_reports_evidence
+- path: developer/test_waitlist.py
+  role: developer
+  story: story_authority_drift
+  criterion: ac_presentation_traceability
+  specification: spec_every_presentation_has_origin_evidence
+- path: stakeholder/brief.md
+  role: stakeholder
+  story: story_repeated_translation
+  criterion: ac_role_projections
+  specification: spec_two_roles_share_one_origin

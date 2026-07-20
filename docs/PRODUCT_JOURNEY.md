@@ -17,10 +17,10 @@ digests, pins, and raw projection files remain available in audit mode.
 | Verification | Review intent, observable checks, and what approval starts in decision language | Cover every active outcome before generation without exposing internal identifiers or verification notation | `test_verification_review_shows_approved_meaning_and_can_return_for_revision` |
 | Generation plan | Inspect projection work, request maximum, cost guardrail, and cache status | Remain stopped until explicit consent and claim one generation under concurrent submission | `test_generation_requires_consent_and_never_requests_same_identity_twice`, `test_concurrent_generation_submissions_claim_one_model_request` |
 | Progress | Leave or revisit while generation runs | Persist progress and move to success or recoverable failure | `test_generation_progress_is_visible_and_survives_navigation` |
-| Result | Operate the generated product and read stakeholder meaning | Verify behavior and connect both roles to one origin identity | `test_keyless_sample_provider_completes_the_same_product_journey` |
+| Result | Judge delegated work against the still-visible actor, pain, and outcome | Show produced artifacts, satisfied and unsatisfied verification, and trace every role presentation to its story, criterion, and specification | `test_approved_story_remains_visible_from_verification_through_result`, `test_delegation_result_distinguishes_proof_sample_and_reports_origin_evidence` |
 | Change | Describe changed intent in plain language | Identify the highest layer and actual downstream records and projections | `test_ready_journey_previews_changes_and_evaluates_learning` |
 | Approval | Approve or reject the complete candidate | Apply regeneration atomically and retain history | `test_ready_journey_previews_changes_and_evaluates_learning` |
-| Learning | Enter representative outcome evidence | Explain continue, revise-verification, or end-bet and retain learning | `test_ready_journey_previews_changes_and_evaluates_learning` |
+| Learning | Describe what was observed about the problem, outcome, or produced behavior | Diagnose problem understanding, verification approach, produced presentation, or inconclusive evidence; state what remains fixed and what changes next | `test_outcome_evidence_identifies_the_failed_layer_and_next_change`, `test_ready_journey_previews_changes_and_evaluates_learning` |
 | Recovery | Return after provider failure | Preserve approved decisions and support safe retry | `test_failed_generation_is_visible_and_resumable_without_losing_decisions` |
 
 ## Trust boundaries
@@ -40,5 +40,7 @@ digests, pins, and raw projection files remain available in audit mode.
 This product intentionally remains local and single-user. SaaS hosting,
 authentication, multitenancy, production telemetry connections, automatic
 deployment, and unrestricted repository generation are not part of this MVP.
-The audited renderer set currently proves one complete waitlist-shaped vertical
-journey and one reusable executable-meaning journey.
+The audited renderer set currently uses one complete waitlist-shaped vertical
+journey as an interchangeable proof sample and one reusable executable-meaning
+journey. Waitlist generation is not Dodai's product value and does not prove
+support for unrestricted product generation.

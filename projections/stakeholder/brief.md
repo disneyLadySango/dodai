@@ -1,14 +1,14 @@
-# dodai
+# Waitlist proof sample
 
 ## Audience
 
-Product managers and engineers who delegate implementation to AI agents.
+A visitor who wants to join the waitlist.
 
 ## Promise
 
-**Delegate product work without losing authoritative intent.**
+**Register your interest**
 
-Keep product intent, verification, executable behavior, and stakeholder explanations aligned—while staying focused on business outcomes instead of technical methods.
+Understand the product’s value, join its waitlist, and remain registered after restart.
 
 ## Journey
 
@@ -18,4 +18,4 @@ recognized without creating a duplicate.
 
 ## Why this projection exists
 
-Visitors understand dodai’s value, join the waitlist, and remain registered after restart.
+An interchangeable proof sample in which a visitor understands the value, joins a waitlist, and remains registered after restart. It demonstrates aligned developer and stakeholder projections; it is not dodai’s product value or evidence that other journeys are supported.

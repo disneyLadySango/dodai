@@ -1,8 +1,8 @@
-origin_digest: 679ec3566233c75b46c967fa0c83c85e8733917668c997450a9378faabc17d00
-origin_source_digest: 9735c33e463aad64fba4880ee4196f84b721624c9939409fff6fba45dce9e689
-pin_digest: 9307ce9502999a1ab4ebfae5a30a5c3ba17163a4b82aa3ad3c042fa0c3f79bcc
+origin_digest: 86c8e39c63488bd26c2fc356e0f29d30df284c9f62e72c318fdefe8302cc66da
+origin_source_digest: 14fecfa1e2d69641fc0d81f1f10a6160a08b9b73ef2d35ad39e4163b33c3901e
+pin_digest: 03ae9f514a61c293bfb6ff526bd4a97e85196d3a7cb50d9ea8ba051878b8f35f
 projection_kind: waitlist
-renderer_version: '5'
+renderer_version: '8'
 files:
 - developer/waitlist.py
 - developer/test_waitlist.py

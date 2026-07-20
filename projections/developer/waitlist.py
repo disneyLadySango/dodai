@@ -10,12 +10,10 @@ from pathlib import Path
 from urllib.parse import parse_qs
 from wsgiref.simple_server import make_server
 
-PRODUCT_NAME = "dodai"
-HEADLINE = "Delegate product work without losing authoritative intent."
+PRODUCT_NAME = "Waitlist proof sample"
+HEADLINE = "Register your interest"
 VALUE_PROPOSITION = (
-    "Keep product intent, verification, executable behavior, and stakeholder "
-    + "explanations aligned—while staying focused on business outcomes instead "
-    + "of technical methods."
+    "Understand the product’s value, join its waitlist, and remain registered after restart."
 )
 CALL_TO_ACTION = "Join the waitlist"
 HTML_LANGUAGE = "en"
