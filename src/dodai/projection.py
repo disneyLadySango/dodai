@@ -11,9 +11,10 @@ from typing import Protocol
 import yaml
 from openai import OpenAI
 
+from dodai.evidence import write_presentation_evidence
 from dodai.origin import load_origin, validate_origin
 
-RENDERER_VERSION = "5"
+RENDERER_VERSION = "8"
 DEFAULT_MODEL = "gpt-5.6"
 
 
@@ -170,7 +171,10 @@ class ProjectionEngine:
             destination = projection_root / relative_path
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_text(body, encoding="utf-8")
+        active_files = [path for path in rendered if path != "manifest.yaml"]
+        evidence_path = write_presentation_evidence(self.root, active_files)
         after = {path: body.encode() for path, body in rendered.items()}
+        after["evidence.yaml"] = evidence_path.read_bytes()
         return ProjectionResult(digest=digest, changed=before != after, files=sorted(rendered))
 
     def _migrate_approved_content(
@@ -578,8 +582,10 @@ def test_executable_meaning_is_complete() -> None:
 
 def _python_assignment(name: str, value: str) -> str:
     encoded = json.dumps(value, ensure_ascii=False)
-    if len(name) + len(encoded) + 3 <= 100:
+    if len(name) + len(encoded) + 3 <= 88:
         return f"{name} = {encoded}"
+    if len(encoded) + 4 <= 100:
+        return f"{name} = (\n    {encoded}\n)"
     chunks = textwrap.wrap(
         value,
         width=72,
@@ -588,5 +594,5 @@ def _python_assignment(name: str, value: str) -> str:
         drop_whitespace=False,
         replace_whitespace=False,
     )
-    expression = "\n    + ".join(json.dumps(chunk, ensure_ascii=False) for chunk in chunks)
+    expression = "\n    ".join(json.dumps(chunk, ensure_ascii=False) for chunk in chunks)
     return f"{name} = (\n    {expression}\n)"

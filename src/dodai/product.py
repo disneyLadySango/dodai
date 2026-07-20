@@ -313,6 +313,25 @@ def record_outcomes(
         workspace / "pins/projection.yaml",
         {"projection_kind": "waitlist", "product_name": bet.name, "journey": journey},
     )
+    _write(
+        workspace / "pins/presentation-map.yaml",
+        {
+            "presentations": [
+                {
+                    "path": path,
+                    "role": role,
+                    "story": "story_primary_pain",
+                    "criterion": "ac_primary_outcome",
+                    "specification": "spec_primary_outcome_is_observable",
+                }
+                for path, role in (
+                    ("developer/waitlist.py", "developer"),
+                    ("developer/test_waitlist.py", "developer"),
+                    ("stakeholder/brief.md", "stakeholder"),
+                )
+            ]
+        },
+    )
     return store.update(
         project_id,
         outcome=outcome.strip(),

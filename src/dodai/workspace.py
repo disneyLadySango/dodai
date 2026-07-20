@@ -100,6 +100,25 @@ def initialize_workspace(root: Path, *, name: str, who: str, pain: str, journey:
         pins / "projection.yaml",
         {"projection_kind": "brief", "journey": journey},
     )
+    _write(
+        pins / "presentation-map.yaml",
+        {
+            "presentations": [
+                {
+                    "path": path,
+                    "role": role,
+                    "story": "story_primary_pain",
+                    "criterion": "ac_role_alignment",
+                    "specification": "spec_roles_share_meaning",
+                }
+                for path, role in (
+                    ("developer/experience.py", "developer"),
+                    ("developer/test_experience.py", "developer"),
+                    ("stakeholder/brief.md", "stakeholder"),
+                )
+            ]
+        },
+    )
     report = validate_origin(load_origin(origin))
     if not report.valid or report.warnings:
         raise ValueError("The initialized origin did not pass validation.")

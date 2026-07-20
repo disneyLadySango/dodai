@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 4
   name: test_specifications
-revision: 5
+revision: 6
 specifications:
   - id: spec_origin_change_reaches_all_projections
     verifies: [ac_complete_regeneration]
@@ -154,6 +154,31 @@ specifications:
     given: A person who has not previously used dodai.
     when: The person reviews the first screen, outcome questions, verification review, and generation consent.
     then: Each stage explains the current input, dodai's next responsibility, and the runnable product, verification result, and stakeholder explanation produced at the end.
+  - id: spec_primary_story_visible_across_journey
+    verifies: [ac_primary_story_visibility]
+    given: One approved actor, pain, and outcome is being delegated.
+    when: The person reviews delegation, generation, results, a proposed change, or a learning decision.
+    then: The same approved actor, pain, and outcome remain visible as the purpose of the work.
+  - id: spec_every_presentation_has_origin_evidence
+    verifies: [ac_presentation_traceability]
+    given: A valid origin and its complete active role-specific presentation set.
+    when: The presentation evidence is inspected.
+    then: Every active presentation identifies an existing user story, outcome criterion, and verification, with no presentation left unjustified.
+  - id: spec_delegation_result_reports_evidence
+    verifies: [ac_delegation_evidence]
+    given: Delegated work has produced its complete result set.
+    when: The person reviews the delegation result.
+    then: Produced artifacts, satisfied and unsatisfied verification, and role-specific meaning are presented together against the approved story.
+  - id: spec_proof_sample_is_identified
+    verifies: [ac_proof_sample_distinction]
+    given: A minimal runnable journey is used to demonstrate origin-driven derivation.
+    when: The person encounters or evaluates that journey.
+    then: It is identified as an interchangeable proof sample and is not presented as dodai's product value or as evidence of unsupported journeys.
+  - id: spec_failure_evidence_identifies_layer
+    verifies: [ac_failure_layer_diagnosis]
+    given: Evidence about the observed problem, expected outcome, or produced behavior is available.
+    when: The evidence is evaluated for learning.
+    then: The result identifies the disproven layer or states that evidence is inconclusive, and identifies which approved meaning remains fixed and which part changes next.
   - id: spec_regeneration_stays_within_budget
     verifies: [guardrail_regeneration_budget]
     given: The sample product and documented reference conditions.

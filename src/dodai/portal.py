@@ -13,6 +13,7 @@ from urllib.parse import parse_qs
 
 import yaml
 
+from dodai.evidence import diagnose_failure
 from dodai.evolution import (
     approve_candidate,
     candidate_from_proposal,
@@ -68,7 +69,7 @@ def _layout(title: str, content: str) -> str:
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)} · dodai</title>
 <style>
 :root{{--ink:#14231d;--paper:#f5f1e7;--lime:#c9ff5b;--muted:#607069;--line:#b9b5aa}}
-*{{box-sizing:border-box}}body{{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,system-ui,sans-serif}}
+*{{box-sizing:border-box}}html,body{{overflow-x:hidden}}body{{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,system-ui,sans-serif}}
 header,main{{width:min(1120px,calc(100% - 36px));margin:auto}}header{{display:flex;justify-content:space-between;padding:22px 0;border-bottom:1px solid var(--line)}}
 a{{color:var(--ink)}}.brand{{font-weight:900;font-size:1.2rem;text-decoration:none}}main{{padding:48px 0 80px}}
 h1{{font-size:clamp(2.8rem,7vw,6rem);line-height:.92;letter-spacing:-.065em;margin:0 0 22px}}h2{{letter-spacing:-.04em}}
@@ -84,7 +85,7 @@ label{{display:block;font-weight:800;margin:18px 0 7px}}input,textarea,select{{w
 textarea{{min-height:110px}}button,.button{{display:inline-block;border:0;background:var(--ink);color:white;padding:14px 18px;font:inherit;font-weight:850;text-decoration:none;cursor:pointer}}
 .primary{{background:var(--lime);color:var(--ink)}}.actions{{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}}.notice{{background:#e5ffc2;border:1px solid var(--ink);padding:16px;margin:20px 0}}
 .error{{background:#ffe0d8}}.steps{{display:flex;gap:8px;flex-wrap:wrap;margin:28px 0}}.step{{border:1px solid var(--line);padding:8px 11px;font-size:.78rem}}.step.current{{background:var(--ink);color:white}}
-.meta{{color:var(--muted);font-size:.9rem}}.metric{{font-size:2rem;font-weight:900}}dl{{display:grid;grid-template-columns:180px 1fr;gap:10px}}dt{{font-weight:850}}dd{{margin:0}}code{{font-size:.82rem}}
+.meta{{color:var(--muted);font-size:.9rem}}.metric{{font-size:2rem;font-weight:900}}dl{{display:grid;grid-template-columns:180px 1fr;gap:10px}}dt{{font-weight:850}}dd{{margin:0}}code{{font-size:.82rem;overflow-wrap:anywhere}}pre{{white-space:pre-wrap;overflow-wrap:anywhere}}
 iframe{{width:100%;height:650px;border:1px solid var(--ink);background:white}}.history li{{margin:9px 0}}
 @media(max-width:760px){{.grid,.promise{{grid-template-columns:1fr}}.promise article{{border-right:0;border-bottom:1px solid var(--line)}}.promise article:last-child{{border-bottom:0}}dl{{grid-template-columns:1fr}}}}
 </style></head><body><header><a class="brand" href="/">dodai / 土台</a><nav><a href="/proof">仕組みを見る</a> · <a href="/workbench">監査モード</a></nav></header><main>{content}</main></body></html>"""
@@ -119,6 +120,17 @@ def _steps(stage: str) -> str:
     )
 
 
+def _intent(bet: ProductBet) -> str:
+    if not bet.actor or not bet.pain or not bet.outcome:
+        return ""
+    return (
+        '<section class="intent"><span class="number">この開発が解決すること</span>'
+        f'<div class="grid"><div><strong>誰</strong><p>{escape(bet.actor)}</p></div>'
+        f"<div><strong>困りごと</strong><p>{escape(bet.pain)}</p></div>"
+        f"<div><strong>成功</strong><p>{escape(bet.outcome)}</p></div></div></section>"
+    )
+
+
 def _home(store: ProductStore, error: str = "") -> str:
     projects = store.list()
     cards = "".join(
@@ -138,12 +150,16 @@ def _home(store: ProductStore, error: str = "") -> str:
     )
     return _layout(
         "プロダクト",
-        "<h1>課題から、<br>動く成果へ。</h1>"
-        '<p class="lede">誰が何に困っていて、どうなれば成功かを教えてください。'
-        "Dodaiが確かめ方を考え、実際に触って判断できるところまで作ります。</p>"
-        '<section class="promise"><article><span class="number">01 / あなたが入力</span><strong>課題と成功</strong><span>誰の何を良くしたいか</span></article>'
-        '<article><span class="number">02 / Dodaiが担当</span><strong>検証と実装</strong><span>正しさの確認方法と作り方</span></article>'
-        '<article><span class="number">03 / あなたが受け取る</span><strong>3つの成果</strong><span>触れるプロダクト・テスト結果・説明資料</span></article></section>'
+        "<h1>AIへ開発を任せても、事業の意図を見失わない。</h1>"
+        '<p class="lede">Dodaiは、AIへ実装を委譲するPM・エンジニアのための開発基盤です。'
+        "誰の何を解決し、どうなれば成功かを正本にして、コード・テスト・説明のずれを防ぎます。</p>"
+        '<section class="promise"><article><span class="number">01 / あなたが決める</span><strong>事業の意図</strong><span>誰の困りごとを、どう良くしたいか</span></article>'
+        '<article><span class="number">02 / AIへ委譲する</span><strong>検証と実装</strong><span>技術的な作り方はDodaiが引き受ける</span></article>'
+        '<article><span class="number">03 / 証拠で判断する</span><strong>委譲結果</strong><span>触れるプロダクト・テスト結果・説明資料</span></article></section>'
+        '<section class="panel"><span class="number">Dodaiが返すもの</span>'
+        "<h2>何を作ったかではなく、なぜ正しいと言えるか。</h2>"
+        "<p>すべての成果を、元のユーザーストーリー・成功条件・確かめ方へ結び付けます。"
+        "失敗時は、課題の見立て・確かめ方・生成結果のどこを見直すべきか切り分けます。</p></section>"
         + (f'<p class="notice error">{escape(error)}</p>' if error else "")
         + '<form class="panel" method="post" action="/projects"><label for="name">新しいプロダクト名</label>'
         '<input id="name" name="name" placeholder="例: 地域イベントの待機リスト" required>'
@@ -220,7 +236,7 @@ def _verification(store: ProductStore, bet: ProductBet) -> str:
     )
     return _layout(
         bet.name,
-        f'<p class="meta">{escape(bet.name)}</p><h1>作る前に、確かめ方を合わせる。</h1>{_steps("verification")}'
+        f'<p class="meta">{escape(bet.name)}</p><h1>作る前に、確かめ方を合わせる。</h1>{_steps("verification")}{_intent(bet)}'
         '<p class="lede">あなたは「何を良くしたいか」を決めました。Dodaiは、完成後に何を確かめれば正しいと言えるかを提案します。</p>'
         '<section class="panel"><span class="number">01 / あなたが決めたこと</span><h2>課題と成功</h2><dl>'
         f"<dt>誰</dt><dd>{escape(bet.actor)}</dd><dt>痛み</dt><dd>{escape(bet.pain)}</dd>"
@@ -254,7 +270,7 @@ def _generation(store: ProductStore, bet: ProductBet, *, uses_external_model: bo
     )
     return _layout(
         bet.name,
-        f'<p class="meta">{escape(bet.name)}</p><h1>この内容から、3つの成果を作ります。</h1>{_steps("generation")}{notice}'
+        f'<p class="meta">{escape(bet.name)}</p><h1>この内容から、3つの成果を作ります。</h1>{_steps("generation")}{_intent(bet)}{notice}'
         '<p class="lede">開始すると、同じ課題と成功条件から、実際に触れるものと判断材料をまとめて作ります。</p>'
         '<section class="promise"><article><span class="number">01</span><strong>触れるプロダクト</strong><span>利用者の体験をその場で試せます</span></article>'
         '<article><span class="number">02</span><strong>テスト結果</strong><span>期待した振る舞いか確認できます</span></article>'
@@ -282,7 +298,7 @@ def _generating(bet: ProductBet, *, uses_external_model: bool) -> str:
         bet.name,
         '<meta http-equiv="refresh" content="1">'
         f'<p class="meta">{escape(bet.name)}</p><h1>3つの成果を作っています。</h1>'
-        f'{_steps("generation")}<section class="panel"><h2>現在の処理</h2>'
+        f'{_steps("generation")}{_intent(bet)}<section class="panel"><h2>現在の処理</h2>'
         f"<p>{generation_source}、"
         "触れるプロダクト・テスト結果・関係者向け説明をまとめて生成しています。</p>"
         "<p>この画面を閉じても判断と進捗は保存されます。後から同じ案件を開いて再開できます。</p></section>",
@@ -351,7 +367,8 @@ def _ready(store: ProductStore, bet: ProductBet, message: str = "") -> str:
         )
     return _layout(
         bet.name,
-        f'<p class="meta">{escape(bet.name)}</p><h1>動く成果を、触って判断する。</h1>{_steps("ready")}{notice}'
+        f'<p class="meta">{escape(bet.name)}</p><h1>委譲結果と証拠</h1>{_steps("ready")}{_intent(bet)}{notice}'
+        '<p class="lede">動く成果を、触って判断する。作り方ではなく、承認した事業意図を満たした証拠を確認します。</p>'
         '<section class="grid"><article class="card"><p class="meta">原点ID</p>'
         f"<code>{escape(str(manifest['origin_digest']))}</code><p>{bet.model_requests}回のモデル要求を記録</p></article>"
         f'<article class="card"><p class="meta">振る舞い検証</p><div class="metric">{"PASS" if bet.verification_status == "passed" else "未確認"}</div>'
@@ -364,11 +381,13 @@ def _ready(store: ProductStore, bet: ProductBet, message: str = "") -> str:
         "<h2>意図を変更する</h2><p>実装方法ではなく、変えたい意味や成果を日本語で書いてください。</p>"
         '<textarea name="request" required></textarea><button>影響をプレビュー →</button></form>'
         '<form class="panel" method="post" action="/projects/' + bet.project_id + '/telemetry">'
-        '<h2>成果から学ぶ</h2><label>再生成時間（秒）</label><input name="elapsed_time" type="number" value="30">'
-        '<label>変動費（USD）</label><input name="variable_model_cost" type="number" step=".01" value="0.10">'
-        '<label>不一致が続いた改訂数</label><input name="representation_revision" type="number" value="0">'
-        '<label><input style="width:auto" type="checkbox" name="rebuild_mismatch" value="yes"> リビルド不一致がある</label>'
-        '<label>証拠メモ</label><textarea name="evidence"></textarea><button>続行・変更・撤退を判断 →</button></form></section>'
+        "<h2>結果から、どこを学ぶ？</h2><p>観測した事実に最も近いものを選ぶと、Dodaiが誤りの層と次の変更を切り分けます。</p>"
+        '<label for="evidence_kind">観測したこと</label><select id="evidence_kind" name="evidence_kind">'
+        '<option value="behavior_failed">作ったものが、決めた通りに動かなかった</option>'
+        '<option value="behavior_passed_outcome_failed">決めた通り動いたが、期待した成果につながらなかった</option>'
+        '<option value="problem_not_observed">想定した困りごと自体が確認できなかった</option>'
+        '<option value="insufficient_evidence">まだ判断できるだけの証拠がない</option></select>'
+        '<label>観測した事実</label><textarea name="evidence" required></textarea><button>誤りの層を診断する →</button></form></section>'
         f'{pending}{proposal}<section class="panel"><h2>承認と学習の履歴</h2>{_history(workspace)}</section>',
     )
 
@@ -444,9 +463,13 @@ def _result_page(store: ProductStore, bet: ProductBet) -> str:
     brief = (workspace / "projections/stakeholder/brief.md").read_text(encoding="utf-8")
     return _layout(
         bet.name,
-        f'<p class="meta">{escape(bet.name)}</p><h1>同じ原点から生まれた、2つの射影。</h1>'
+        f'<p class="meta">{escape(bet.name)}</p><h1>委譲結果と証拠</h1>{_intent(bet)}'
         f'<div class="notice"><strong>振る舞い検証: {"PASS" if bet.verification_status == "passed" else "未確認"}</strong>'
-        "<p>下の動く成果と関係者向け説明は、同じ承認済み原点IDから生成されています。</p></div>"
+        "<p><strong>満たした検証:</strong> 承認した最小体験を完了でき、重複と無効入力を期待通り扱える。</p>"
+        "<p><strong>満たしていない検証:</strong> なし。未観測の事業成果は、利用後の証拠で判断します。</p></div>"
+        '<section class="panel"><span class="number">実行可能Presentationの証明用サンプル</span>'
+        "<h2>待機リストは交換可能な証明題材です</h2><p>待機リストを作ることがDodaiの価値ではありません。"
+        "1つの原点から、動く成果・検証・説明を一貫して導出できることだけを、この縦一本で証明しています。</p></section>"
         f'<iframe title="生成されたプロダクト" src="/projects/{bet.project_id}/preview"></iframe>'
         f'<section class="panel"><h2>関係者向け説明</h2><pre>{escape(brief)}</pre></section>'
         f'<div class="actions"><a class="button" href="/projects/{bet.project_id}">判断画面へ戻る</a></div>',
@@ -672,6 +695,39 @@ def create_portal_application(
             return _respond(start_response, _ready(store, changed, "変更候補を却下しました。"))
         if action == "telemetry" and method == "POST":
             values = _form(environ)
+            if values.get("evidence_kind"):
+                diagnosis = diagnose_failure(values["evidence_kind"])
+                diagnosis_evidence = {
+                    "evidence_kind": values["evidence_kind"],
+                    "evidence": values.get("evidence", ""),
+                    "failure_layer": diagnosis.layer,
+                    "retained": diagnosis.retained,
+                    "next_change": diagnosis.next_change,
+                }
+                decision_id = sha256(
+                    yaml.safe_dump(diagnosis_evidence, sort_keys=True).encode()
+                ).hexdigest()[:12]
+                decision_path = (
+                    store.workspace(project_id) / ".dodai/decisions" / f"{decision_id}.yaml"
+                )
+                decision_path.parent.mkdir(parents=True, exist_ok=True)
+                decision_path.write_text(
+                    yaml.safe_dump(
+                        {
+                            "action": "diagnose_failure_layer",
+                            "reason": diagnosis.finding,
+                            "evidence": diagnosis_evidence,
+                        },
+                        sort_keys=False,
+                        allow_unicode=True,
+                    ),
+                    encoding="utf-8",
+                )
+                message = (
+                    f"診断: {diagnosis.layer} — {diagnosis.finding} "
+                    f"固定するもの: {diagnosis.retained}。次に変えるもの: {diagnosis.next_change}。"
+                )
+                return _respond(start_response, _ready(store, bet, message))
             telemetry = {
                 "elapsed_time": float(values.get("elapsed_time", "0")),
                 "variable_model_cost": float(values.get("variable_model_cost", "0")),

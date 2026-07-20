@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 3
   name: acceptance_criteria
-revision: 5
+revision: 6
 criteria:
   - id: ac_complete_regeneration
     kind: outcome
@@ -116,6 +116,26 @@ criteria:
     kind: outcome
     supports: [story_visible_input_result, story_visible_journey]
     statement: From the first screen through generation consent, each stage states what the person provides, what dodai does next, and which runnable, verified, and explanatory results the person will receive.
+  - id: ac_primary_story_visibility
+    kind: outcome
+    supports: [story_authority_drift, story_visible_journey]
+    statement: Throughout delegation, generation, result review, change, and learning, a person can see the approved actor, pain, and outcome that the work is intended to serve.
+  - id: ac_presentation_traceability
+    kind: outcome
+    supports: [story_authority_drift, story_repeated_translation]
+    statement: Every active role-specific presentation identifies the approved user story, outcome criterion, and verification that justify its meaning or behavior.
+  - id: ac_delegation_evidence
+    kind: outcome
+    supports: [story_method_micromanagement, story_authority_drift]
+    statement: A person can judge delegated work from its produced artifacts and satisfied or unsatisfied verification against the approved story, without evaluating the technical method used.
+  - id: ac_proof_sample_distinction
+    kind: outcome
+    supports: [story_authority_drift]
+    statement: A runnable sample used to prove derivation is clearly distinguished from dodai's product value and does not imply that other product journeys are supported without evidence.
+  - id: ac_failure_layer_diagnosis
+    kind: outcome
+    supports: [story_failure_diagnosis, story_retained_product_learning]
+    statement: Given outcome evidence, a person can identify whether it disproves the problem understanding, verification approach, or produced behavior, or whether the evidence is inconclusive, and can see what remains fixed and what changes next.
   - id: guardrail_regeneration_budget
     kind: guardrail
     supports: [ac_complete_regeneration]

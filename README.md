@@ -1,10 +1,10 @@
 # dodai
 
 dodai is an origin-driven development tool for product managers and engineers
-who delegate implementation to AI agents. One human-auditable origin produces
-executable developer artifacts and stakeholder communication, while fast tests
-and simulated telemetry keep implementation failures separate from failed
-product bets.
+who delegate implementation to AI agents without surrendering authority over
+business intent. One human-auditable origin produces executable developer
+artifacts, verification, and stakeholder communication. Every presentation is
+traced back to the story, outcome, and test specification that justify it.
 
 Built for the OpenAI Build Week 2026 Developer Tools track.
 
@@ -19,9 +19,12 @@ files:
    Dodai owns operational defaults; product-specific language is optional context.
 4. Review a plain-language explanation of intent, checks, and what approval starts.
 5. Review the model-request maximum, cost guardrail, and cache state, then consent.
-6. Experience executable behavior, behavioral verification, and stakeholder meaning.
+6. Judge the delegation result against the still-visible actor, pain, and outcome.
+   Inspect executable behavior, satisfied and unsatisfied verification, and
+   stakeholder meaning with explicit origin evidence.
 7. Request a plain-language change and approve or reject its complete impact.
-8. Enter outcome evidence and receive a continue, revise-verification, or end-bet decision.
+8. Enter outcome evidence and see whether it disproves problem understanding,
+   verification, or the produced presentation, or remains inconclusive.
 9. Return later, see each bet's current stage and next decision, and resume safely.
 
 The [origin](origin/README.md) is authoritative. The committed
@@ -111,9 +114,10 @@ identity.
 ![dodai product-bet workspace](docs/assets/showcase.png)
 
 The generated waitlist supports valid, duplicate, and invalid registration
-feedback and retains registrations across server restarts. The result screen
-shows behavioral verification and a stakeholder brief beside the runnable
-experience.
+feedback and retains registrations across server restarts. It is an
+interchangeable proof sample, not Dodai's product value. The result screen shows
+the approved story, behavioral evidence, stakeholder meaning, and their
+machine-readable mapping in `projections/evidence.yaml`.
 
 ![Generated dodai waitlist browser experience](docs/assets/browser-demo.png)
 

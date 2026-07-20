@@ -93,6 +93,10 @@ records:
   guided_input: 原点の仕組みを設定せず、通常のプロダクト言語で答えられる主要な質問。
   optional_context: 共通理解に役立つ場合だけ追加でき、先へ進むためには必須でない意味の補足。
   expected_result: 承認した操作の後に得られる、観測可能なプロダクト・検証・説明。
+  delegation_evidence: 委譲した仕事が承認済み意図を保ち、検証を満たしたかを示す観測可能な証拠。
+  presentation_evidence: ロール別Presentationを、その根拠となるストーリー・成果・検証へ明示的に結ぶ証拠。
+  proof_sample: 導出を証明するための交換可能な最小プロダクト体験で、Dodai自身の価値を定義しないもの。
+  failure_layer: 証拠によって否定された最上位の原点またはPresentation層、もしくは判断不能という明示的結果。
   story_authority_drift: 意図・実行・検証・説明がずれ、何が正しい意味か分からなくなる。
   story_method_micromanagement: 技術的方法の指示に時間を奪われ、ビジネス課題へ集中できない。
   story_repeated_translation: 同じ意図を対象者ごとに翻訳し直し、手間と意味の不一致が生じる。
@@ -138,6 +142,11 @@ records:
   ac_lightweight_guided_input: 人・困りごと・改善・最初の行動から結果だけを答えれば検証確認へ進め、運用値はDodaiが持ち、言葉の補足は任意である。
   ac_readable_verification_review: 内部IDや検証記法を読まず、承認した意図・Dodaiの確認内容・承認後に始まることを区別できる。
   ac_visible_input_to_result: 最初の画面から生成承認まで、入力・Dodaiの次の仕事・最後に得られる3つの成果が分かる。
+  ac_primary_story_visibility: 委譲から学習まで、仕事が誰の痛みと成果のためかを常に確認できる。
+  ac_presentation_traceability: すべての有効なPresentationを、根拠となるストーリー・成果基準・検証へ追跡できる。
+  ac_delegation_evidence: 技術的方法を評価せず、成果物と検証証拠から委譲結果を判断できる。
+  ac_proof_sample_distinction: 実行サンプルがDodaiの価値ではなく、交換可能な証明題材だと明確に分かる。
+  ac_failure_layer_diagnosis: 成果証拠から、課題理解・検証方法・生成結果のどこが否定されたか、または判断不能かを切り分けられる。
   guardrail_regeneration_budget: 全射影の再生成を対話的に使える時間と費用へ収める。
   exit_origin_representation: 表現改訂を3回続けてもリビルド不一致なら、現在の表現方式を撤退する。
   spec_origin_change_reaches_all_projections: 原点の1文を変え1回再生成すると、全射影へ反映されることを検証する。
@@ -172,3 +181,8 @@ records:
   spec_optional_context_stays_secondary: プロダクト固有の言葉の補足は閉じた任意項目で、空でも進めることを検証する。
   spec_verification_review_uses_decision_language: 意図・観測可能な確認・承認後の結果が視覚的に分かれ、内部IDと検証記法が主要表示に出ないことを検証する。
   spec_each_stage_connects_input_to_result: 各段階で入力・Dodaiの次の仕事・最後の動く成果・検証・説明が結び付いて見えることを検証する。
+  spec_primary_story_visible_across_journey: 委譲・生成・結果・変更・学習で、同じ人・痛み・成果が目的として見えることを検証する。
+  spec_every_presentation_has_origin_evidence: 全Presentationが既存のストーリー・成果基準・検証を根拠として持つことを検証する。
+  spec_delegation_result_reports_evidence: 委譲結果で、成果物・合格と不合格の検証・ロール別の意味を同じストーリーに対して確認できることを検証する。
+  spec_proof_sample_is_identified: 最小体験が交換可能な証明サンプルであり、Dodaiの製品価値や未証明の対応範囲として示されないことを検証する。
+  spec_failure_evidence_identifies_layer: 証拠が否定する層または判断不能を示し、固定する意味と次に変える部分が分かることを検証する。
