@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from io import BytesIO
 from pathlib import Path
 
 import yaml
 
 from dodai.origin import load_origin, validate_origin
 from dodai.projection import ProjectionContent, ProjectionEngine
+from dodai.showcase import create_showcase_application
 from dodai.workspace import initialize_workspace
 
 
@@ -61,3 +63,24 @@ def test_two_different_products_use_the_same_origin_discipline(tmp_path: Path) -
         yaml.safe_load((decisions / "projections/manifest.yaml").read_text())["projection_kind"]
         == "brief"
     )
+
+    application = create_showcase_application(decisions)
+    response: dict[str, str] = {}
+
+    def start_response(status, headers):
+        response["status"] = status
+
+    body = b"".join(
+        application(
+            {
+                "REQUEST_METHOD": "GET",
+                "PATH_INFO": "/projection",
+                "CONTENT_LENGTH": "0",
+                "wsgi.input": BytesIO(),
+            },
+            start_response,
+        )
+    ).decode()
+    assert response["status"] == "200 OK"
+    assert "Decision Foundation" in body
+    assert "Decide once" in body

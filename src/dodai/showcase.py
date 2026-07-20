@@ -35,12 +35,39 @@ def _mapping(path: Path) -> dict[str, Any]:
 
 
 def _projection_application(root: Path) -> Application:
-    path = root / "projections/developer/waitlist.py"
+    manifest = _mapping(root / "projections/manifest.yaml")
+    projection_kind = str(manifest.get("projection_kind", "waitlist"))
+    filename = "experience.py" if projection_kind == "brief" else "waitlist.py"
+    path = root / "projections/developer" / filename
     spec = importlib.util.spec_from_file_location("dodai_generated_waitlist", path)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Could not load generated projection from {path}.")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    if projection_kind == "brief":
+        meaning = cast(dict[str, str], module.describe())
+
+        def brief_application(
+            environ: dict[str, Any], start_response: StartResponse
+        ) -> Iterable[bytes]:
+            body = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width"><title>{escape(meaning["product_name"])}</title>
+<style>body{{margin:0;background:#f5f1e7;color:#14231d;font-family:system-ui,sans-serif}}
+main{{width:min(900px,calc(100% - 40px));margin:auto;padding:12vh 0}}
+h1{{font-size:clamp(4rem,10vw,8rem);line-height:.88;letter-spacing:-.07em}}
+p{{font-size:1.3rem;line-height:1.6;max-width:650px}}</style></head><body><main>
+<small>EXECUTABLE MEANING PROJECTION</small><h1>{escape(meaning["headline"])}</h1>
+<p>{escape(meaning["value_proposition"])}</p></main></body></html>""".encode()
+            start_response(
+                "200 OK",
+                [
+                    ("Content-Type", "text/html; charset=utf-8"),
+                    ("Content-Length", str(len(body))),
+                ],
+            )
+            return [body]
+
+        return brief_application
     create_application = module.create_application
     return cast(Application, create_application(root / ".dodai/demo/registrations.json"))
 
