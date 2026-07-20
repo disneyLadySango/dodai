@@ -29,4 +29,3 @@ renderers remain responsible for executable structure.
 - Pins participate in projection identity and are attributed separately from
   origin meaning.
 - Arbitrary executable generation remains deliberately out of scope.
-

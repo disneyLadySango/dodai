@@ -32,4 +32,3 @@ current locations are ignored implementation details, not origin requirements.
 - Model, validation, or rendering failure cannot partially approve a change.
 - A stale candidate must be previewed again.
 - History is produced by approval rather than reconstructed afterward.
-
