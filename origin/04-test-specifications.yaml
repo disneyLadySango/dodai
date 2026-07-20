@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 4
   name: test_specifications
-revision: 2
+revision: 3
 specifications:
   - id: spec_origin_change_reaches_all_projections
     verifies: [ac_complete_regeneration]
@@ -79,6 +79,16 @@ specifications:
     given: Two valid origins that use different business language and describe different minimal product journeys.
     when: Each origin is validated, revised, and projected for its active roles.
     then: Each journey remains isolated and complete without product-specific changes to dodai.
+  - id: spec_supported_language_is_complete
+    verifies: [ac_supported_language_audit]
+    given: A valid origin and a person using any supported presentation language.
+    when: The person inspects all four layers, reviews a candidate revision, and makes an approval decision.
+    then: Every meaning, consequence, status, and available action needed for the decision is understandable in the selected language without relying on another language.
+  - id: spec_presentation_languages_are_equivalent
+    verifies: [ac_presentation_language_equivalence]
+    given: The same valid origin, evidence, and candidate revision presented in two supported languages.
+    when: Equivalent inspection and decision journeys are completed in each language.
+    then: Both journeys report the same affected records, validation outcome, decision result, authoritative origin identity, and projection identity.
   - id: spec_regeneration_stays_within_budget
     verifies: [guardrail_regeneration_budget]
     given: The sample product and documented reference conditions.
