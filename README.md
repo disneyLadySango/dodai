@@ -98,8 +98,11 @@ derivation and delegation, so the complete journey requires no credential and
 makes no API request. It still changes a real isolated Git repository and runs
 its verification. Product-bet state is resumable under ignored `.dodai/workspaces/`.
 
-To use GPT-5.6 for newly approved origins, set `OPENAI_API_KEY` in the launching
-environment and run without `--sample`:
+To use GPT-5.6 for newly approved origins, copy `.env.example` to `.env`, set
+`OPENAI_API_KEY`, and run without `--sample`. Dodai also respects an existing
+launching environment variable and never overwrites it. A task worktree reuses
+the ignored `.env` from the primary Git checkout, so the key is configured only
+once:
 
 ```bash
 uv run dodai --root . showcase
