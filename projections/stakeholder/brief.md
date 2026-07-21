@@ -1,14 +1,14 @@
-# dodai
+# Waitlist proof sample
 
 ## Audience
 
-Product managers and engineers who delegate implementation to AI agents.
+A visitor considering joining the waitlist.
 
 ## Promise
 
-**Keep delegated product work aligned with approved intent.**
+**Understand the value. Join the waitlist.**
 
-Connect product intent, observable outcomes, verification, and explanations so you can judge delegated work without directing technical methods.
+A minimal journey to understand the value, join the waitlist, and remain registered after restart.
 
 ## Journey
 
@@ -18,4 +18,4 @@ recognized without creating a duplicate.
 
 ## Why this projection exists
 
-A visitor understands dodai’s value, joins the waitlist, and remains registered after restart. This minimal journey is an interchangeable proof sample, not evidence of additional supported journeys.
+An interchangeable proof sample covering one vertical journey: a visitor understands the value, joins the waitlist, and remains registered after restart. It demonstrates aligned developer behavior, verification, and stakeholder meaning; it is not dodai’s product value or evidence of other journeys.
