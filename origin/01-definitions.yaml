@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 1
   name: definitions
-revision: 8
+revision: 9
 terms:
   - id: origin
     definition: The sole authority for product intent and constraints jointly maintained by people and AI agents.
@@ -129,6 +129,12 @@ terms:
     allowed_layers: [1, 3, 4]
   - id: experienceable_result
     definition: Delegated product behavior a person can immediately operate when judging whether approved intent was achieved.
+    allowed_layers: [1, 2, 3, 4]
+  - id: interaction_evidence
+    definition: An immutable account of what a person observed while operating one delegated result.
+    allowed_layers: [1, 2, 3, 4]
+  - id: attempt_comparison
+    definition: A judgment of observable differences between delegation runs against unchanged or explicitly revised approved intent.
     allowed_layers: [1, 2, 3, 4]
 boundary_terms:
   story_solution_vocabulary:

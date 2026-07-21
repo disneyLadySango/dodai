@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 2
   name: user_stories
-revision: 8
+revision: 9
 stories:
   - id: story_authority_drift
     who: A product manager or engineer who delegates implementation to AI agents.

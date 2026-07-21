@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 4
   name: test_specifications
-revision: 8
+revision: 9
 specifications:
   - id: spec_origin_change_reaches_all_projections
     verifies: [ac_complete_regeneration]
@@ -209,6 +209,21 @@ specifications:
     given: Delegated work has produced a complete result with verification and stakeholder meaning.
     when: The person judges the result against the approved intent.
     then: The resulting product behavior can be operated immediately while its verification and stakeholder meaning remain visible and connected to that intent.
+  - id: spec_plain_observation_identifies_failure_layer
+    verifies: [ac_plain_interaction_evidence]
+    given: A person has operated a completed delegation result.
+    when: They describe whether the pain remains, the behavior worked, and the approved outcome occurred, with an observed fact.
+    then: A diagnosis or success decision is derived without asking them to choose an origin or presentation layer, and the answers remain connected to that delegation run.
+  - id: spec_verification_failure_prepares_only_reverification
+    verifies: [ac_evidence_guided_reverification]
+    given: Interaction evidence shows that verified behavior did not achieve the approved outcome.
+    when: Dodai prepares the next change for human review.
+    then: Only a test specification is proposed, the supported user story and acceptance criterion remain unchanged, and no authoritative meaning changes before explicit approval.
+  - id: spec_redelegation_attempts_are_compared
+    verifies: [ac_delegation_attempt_comparison]
+    given: Prior and current delegation runs exist for one product bet.
+    when: The person judges the current result.
+    then: Artifact changes, verification evidence, and recorded interaction evidence from both runs are visible as a comparison against the approved intent.
   - id: spec_regeneration_stays_within_budget
     verifies: [guardrail_regeneration_budget]
     given: The sample product and documented reference conditions.
