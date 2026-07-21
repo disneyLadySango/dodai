@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 3
   name: acceptance_criteria
-revision: 9
+revision: 10
 criteria:
   - id: ac_complete_regeneration
     kind: outcome
@@ -172,6 +172,14 @@ criteria:
     kind: outcome
     supports: [story_delegation_handoff_evidence, story_retained_product_learning]
     statement: After another delegation run, a person can compare prior and current artifacts, verification, and interaction evidence against the approved intent.
+  - id: ac_presentation_only_repair
+    kind: outcome
+    supports: [story_failure_diagnosis, story_authority_drift]
+    statement: When interaction evidence shows that produced behavior failed, a person can approve one presentation repair attempt while every approved origin layer remains observably unchanged.
+  - id: ac_repair_verification_comparison
+    kind: outcome
+    supports: [story_delegation_handoff_evidence, story_retained_product_learning]
+    statement: After a presentation repair attempt, a person can compare the failed and repaired behavior, artifacts, and verification without treating repaired behavior as proof that the business outcome occurred.
   - id: guardrail_regeneration_budget
     kind: guardrail
     supports: [ac_complete_regeneration]

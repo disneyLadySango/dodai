@@ -20,6 +20,15 @@ class InteractionDiagnosis:
     next_change: str
 
 
+def origin_snapshot_digest(workspace: Path) -> str:
+    origin = workspace / "origin"
+    content = b"".join(
+        path.name.encode() + b"\0" + path.read_bytes() + b"\0"
+        for path in sorted(origin.glob("*.yaml"))
+    )
+    return sha256(content).hexdigest()
+
+
 def diagnose_interaction(
     pain_present: str, behavior_worked: str, outcome_achieved: str
 ) -> InteractionDiagnosis:

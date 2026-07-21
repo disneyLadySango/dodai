@@ -34,6 +34,7 @@ from dodai.evolution import (
 )
 from dodai.learning import (
     load_interaction_evidence,
+    origin_snapshot_digest,
     prepare_reverification_candidate,
     record_interaction_evidence,
 )
@@ -452,6 +453,11 @@ def _delegation_result(store: ProductStore, bet: ProductBet) -> str:
             f"（内容は{'変化あり' if changed else '同一'}）</p>"
             f"<p>前回の操作証拠: {' / '.join(observations) or '記録なし'}</p></section>"
         )
+        if bet.presentation_repair_status == "completed":
+            comparison += (
+                '<section class="notice"><strong>動作修復: 検証PASS</strong>'
+                "<p>事業成果: 未確認 — 修復後の成果を操作し、新しい事実を記録してください。</p></section>"
+            )
     learning_form = (
         '<section class="panel"><span class="number">触って分かったこと</span>'
         "<h3>この成果で、本当に前へ進めましたか？</h3>"
@@ -525,10 +531,14 @@ def _complete_delegation(
 ) -> None:
     workspace = store.workspace(bet.project_id)
     repository = workspace / "delegation" / "repository"
+    repairing = bet.presentation_repair_status == "approved"
+    origin_before = origin_snapshot_digest(workspace) if repairing else ""
     try:
         prepare_repository(repository, origin_summary=_delegation_origin_summary(bet))
         result = runner_factory().run(repository, _delegation_prompt(bet))
         evidence = collect_delegation_evidence(repository, result, attempt=bet.delegation_attempts)
+        if repairing and origin_snapshot_digest(workspace) != origin_before:
+            raise ValueError("Presentation repair changed the approved origin.")
         write_delegation_evidence(workspace, evidence)
     except DelegationExecutionError as error:
         store.update(
@@ -548,6 +558,11 @@ def _complete_delegation(
         bet.project_id,
         delegation_status="completed",
         delegation_error="",
+        presentation_repair_status=(
+            "completed"
+            if repairing and evidence.verification_status == "passed"
+            else bet.presentation_repair_status
+        ),
     )
 
 
@@ -586,6 +601,17 @@ def _ready(store: ProductStore, bet: ProductBet, message: str = "") -> str:
             f'<form method="post" action="/projects/{bet.project_id}/learning/adopt">'
             '<button class="primary">検証変更を承認して採用 →</button></form></section>'
         )
+    repair = ""
+    if bet.presentation_repair_status == "proposed":
+        repair = (
+            '<section class="panel"><span class="number">Presentation修復案</span>'
+            "<h2>原点を変えず、動かなかった成果だけを直す。</h2>"
+            "<p>Story・AC・確かめ方を含む原点4層は固定します。操作失敗の事実を添えて、Codexへ1回だけ再委譲します。</p>"
+            f'<form method="post" action="/projects/{bet.project_id}/learning/repair">'
+            '<label><input style="width:auto" type="checkbox" name="consent" value="yes" required> '
+            "原点を変えない1回のPresentation修復を承認する</label>"
+            '<button class="primary">Presentationだけを修復する →</button></form></section>'
+        )
     return _layout(
         bet.name,
         f'<p class="meta">{escape(bet.name)}</p><h1>開発をCodexへ委譲し、証拠で判断する。</h1>{_steps("ready")}{_intent(bet)}{notice}'
@@ -604,7 +630,7 @@ def _ready(store: ProductStore, bet: ProductBet, message: str = "") -> str:
         + '/change">'
         "<h2>意図を変更する</h2><p>実装方法ではなく、変えたい意味や成果を日本語で書いてください。</p>"
         '<textarea name="request" required></textarea><button>影響をプレビュー →</button></form></section>'
-        f'{pending}{proposal}<section class="panel"><h2>承認と学習の履歴</h2>{_history(workspace)}</section>',
+        f'{pending}{proposal}{repair}<section class="panel"><h2>承認と学習の履歴</h2>{_history(workspace)}</section>',
     )
 
 
@@ -957,6 +983,7 @@ def create_portal_application(
                 delegation_feedback=feedback,
                 delegation_accepted=False,
                 delegation_error="",
+                presentation_repair_status="not_started",
             )
             return _respond(
                 start_response,
@@ -1025,6 +1052,9 @@ def create_portal_application(
                 ),
                 delegation_accepted=False if learning_change else bet.delegation_accepted,
                 learning_change=False,
+                presentation_repair_status=(
+                    "not_started" if learning_change else bet.presentation_repair_status
+                ),
             )
             return _respond(
                 start_response,
@@ -1075,6 +1105,21 @@ def create_portal_application(
                     start_response,
                     _ready(store, changed, "第4層の確かめ方を見直します。StoryとACは固定します。"),
                 )
+            if diagnosis["evidence_kind"] == "behavior_failed":
+                changed = store.update(
+                    project_id,
+                    interaction_evidence=str(evidence_path),
+                    presentation_repair_status="proposed",
+                    repair_origin_digest=origin_snapshot_digest(store.workspace(project_id)),
+                )
+                return _respond(
+                    start_response,
+                    _ready(
+                        store,
+                        changed,
+                        "操作失敗の証拠からPresentationだけを修復します。原点4層は変更しません。",
+                    ),
+                )
             changed = store.update(project_id, interaction_evidence=str(evidence_path))
             message = (
                 "実際の操作で成果が確認できました。採用するか判断できます。"
@@ -1082,6 +1127,34 @@ def create_portal_application(
                 else f"{diagnosis['failure_layer']}を次の学習対象として記録しました。"
             )
             return _respond(start_response, _ready(store, changed, message))
+        if action == "learning/repair" and method == "POST":
+            values = _form(environ)
+            if bet.presentation_repair_status != "proposed":
+                return _respond(start_response, "Repair plan missing", "409 Conflict")
+            if values.get("consent") != "yes":
+                return _respond(
+                    start_response,
+                    _ready(store, bet, "Presentation修復には明示承認が必要です。"),
+                    "422 Unprocessable Entity",
+                )
+            if origin_snapshot_digest(store.workspace(project_id)) != bet.repair_origin_digest:
+                return _respond(start_response, "Approved origin changed", "409 Conflict")
+            observation = load_interaction_evidence(Path(bet.interaction_evidence))["observation"]
+            changed = store.update(
+                project_id,
+                presentation_repair_status="approved",
+                delegation_status="planned",
+                delegation_feedback=str(observation),
+                delegation_accepted=False,
+                delegation_error="",
+            )
+            return _respond(
+                start_response,
+                _delegation_plan(
+                    changed,
+                    "原点4層を固定し、同じ意図からPresentationだけを直す1回の修復を承認しました。",
+                ),
+            )
         if action == "telemetry" and method == "POST":
             values = _form(environ)
             if values.get("evidence_kind"):
