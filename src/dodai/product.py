@@ -60,6 +60,9 @@ class ProductBet:
     learning_change: bool = False
     presentation_repair_status: str = "not_started"
     repair_origin_digest: str = ""
+    problem_rediscovery_status: str = "not_started"
+    rediscovered_actor: str = ""
+    rediscovered_pain: str = ""
 
 
 @dataclass(frozen=True)

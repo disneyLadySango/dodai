@@ -7,6 +7,7 @@ from dodai.learning import (
     diagnose_interaction,
     origin_snapshot_digest,
     prepare_reverification_candidate,
+    prepare_story_rediscovery_candidate,
     record_interaction_evidence,
 )
 from dodai.product import ProductStore, approve_verification, record_outcomes, record_problem
@@ -97,3 +98,66 @@ def test_outcome_gap_prepares_only_a_layer_four_revision(tmp_path: Path) -> None
     assert (workspace / "origin/02-user-stories.yaml").read_bytes() == story_before
     assert (workspace / "origin/03-acceptance-criteria.yaml").read_bytes() == criteria_before
     assert candidate.affected_records == ["spec_primary_outcome_is_observable"]
+
+
+def test_rediscovery_candidate_preserves_the_disproven_problem_as_a_loss(
+    tmp_path: Path,
+) -> None:
+    store = ProductStore(tmp_path)
+    bet = store.create("Rediscovery product")
+    record_problem(store, bet.project_id, actor="Initial PM", pain="Initial pain was assumed")
+    record_outcomes(
+        store,
+        bet.project_id,
+        outcome="A decision can be made",
+        journey="Observe → decide",
+    )
+    approve_verification(store, bet.project_id)
+    workspace = store.workspace(bet.project_id)
+    evidence_path = record_interaction_evidence(
+        workspace,
+        attempt=1,
+        pain_present="no",
+        behavior_worked="yes",
+        outcome_achieved="yes",
+        observation="The assumed pain was not observed.",
+    )
+
+    candidate = prepare_story_rediscovery_candidate(
+        workspace,
+        evidence_path,
+        actor="Observed operator",
+        pain="The operator cannot compare the evidence before deciding",
+    )
+    proposed = yaml.safe_load(candidate.proposed_text)
+    story = proposed["stories"][0]
+
+    assert candidate.layer_file == "02-user-stories.yaml"
+    assert story["who"] == "Observed operator"
+    assert story["pain"].startswith("The operator cannot compare")
+    assert story["losing_records"][0]["bet"] == "Initial PM: Initial pain was assumed"
+    assert story["losing_records"][0]["evidence"] == "The assumed pain was not observed."
+
+
+def test_rediscovery_rejects_solution_language(tmp_path: Path) -> None:
+    store = ProductStore(tmp_path)
+    bet = store.create("Rediscovery product")
+    record_problem(store, bet.project_id, actor="Initial PM", pain="Initial pain")
+    record_outcomes(store, bet.project_id, outcome="Outcome", journey="Observe → decide")
+    approve_verification(store, bet.project_id)
+    evidence_path = record_interaction_evidence(
+        store.workspace(bet.project_id),
+        attempt=1,
+        pain_present="no",
+        behavior_worked="yes",
+        outcome_achieved="yes",
+        observation="The pain was not observed.",
+    )
+
+    with pytest.raises(ValueError, match="solution language"):
+        prepare_story_rediscovery_candidate(
+            store.workspace(bet.project_id),
+            evidence_path,
+            actor="Observed operator",
+            pain="The operator needs a dashboard",
+        )

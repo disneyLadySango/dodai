@@ -1,14 +1,14 @@
-# dodai
+# dodai Early Access
 
 ## Audience
 
-Product managers and engineers who delegate product work to AI agents.
+Product managers and engineers who delegate implementation to AI agents
 
 ## Promise
 
-**Delegate product work without losing authoritative intent.**
+**Keep delegated product work aligned with approved intent**
 
-Keep approved product intent, delegated behavior, verification, and stakeholder explanations connected—so you can judge outcomes without micromanaging technical methods.
+Reduce drift between product intent, executable behavior, verification, and stakeholder explanations—without micromanaging technical methods.
 
 ## Journey
 
@@ -18,4 +18,4 @@ recognized without creating a duplicate.
 
 ## Why this projection exists
 
-An interchangeable proof sample: a visitor understands dodai’s value, joins the waitlist, and remains registered after restart. It demonstrates one vertical journey only and does not define dodai’s product value or imply support for other journeys.
+This minimal waitlist is an interchangeable proof sample: a visitor understands dodai’s value, joins the waitlist, and remains registered after restart. It demonstrates one vertical journey only and does not imply support for other product journeys.

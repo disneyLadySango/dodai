@@ -10,12 +10,11 @@ from pathlib import Path
 from urllib.parse import parse_qs
 from wsgiref.simple_server import make_server
 
-PRODUCT_NAME = "dodai"
-HEADLINE = "Delegate product work without losing authoritative intent."
+PRODUCT_NAME = "dodai Early Access"
+HEADLINE = "Keep delegated product work aligned with approved intent"
 VALUE_PROPOSITION = (
-    "Keep approved product intent, delegated behavior, verification, and "
-    "stakeholder explanations connected—so you can judge outcomes without "
-    "micromanaging technical methods."
+    "Reduce drift between product intent, executable behavior, verification, "
+    "and stakeholder explanations—without micromanaging technical methods."
 )
 CALL_TO_ACTION = "Join the waitlist"
 HTML_LANGUAGE = "en"

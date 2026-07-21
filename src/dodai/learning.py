@@ -9,6 +9,7 @@ import yaml
 
 from dodai.evidence import diagnose_failure
 from dodai.evolution import CandidateRevision, prepare_candidate
+from dodai.product import solution_terms
 
 
 @dataclass(frozen=True)
@@ -134,5 +135,46 @@ def prepare_reverification_candidate(workspace: Path, evidence_path: Path) -> Ca
     return prepare_candidate(
         workspace,
         "04-test-specifications.yaml",
+        yaml.safe_dump(layer, sort_keys=False, allow_unicode=True),
+    )
+
+
+def prepare_story_rediscovery_candidate(
+    workspace: Path,
+    evidence_path: Path,
+    *,
+    actor: str,
+    pain: str,
+) -> CandidateRevision:
+    evidence = load_interaction_evidence(evidence_path)
+    if evidence.get("diagnosis", {}).get("evidence_kind") != "problem_not_observed":
+        raise ValueError("Only unobserved-problem evidence can open Story rediscovery.")
+    actor = actor.strip()
+    pain = pain.strip()
+    if not actor or not pain:
+        raise ValueError("A newly observed person and pain are required.")
+    if solution_terms(pain):
+        raise ValueError("The rediscovered pain contains solution language.")
+    layer_path = workspace / "origin/02-user-stories.yaml"
+    layer = yaml.safe_load(layer_path.read_text(encoding="utf-8"))
+    layer["revision"] = int(layer["revision"]) + 1
+    story = layer["stories"][0]
+    disproven = f"{story['who']}: {story['pain']}"
+    observation = str(evidence["observation"])
+    loss_id = sha256(f"{disproven}\n{observation}".encode()).hexdigest()[:16]
+    losses = story.setdefault("losing_records", [])
+    if not any(item.get("id") == loss_id for item in losses):
+        losses.append(
+            {
+                "id": loss_id,
+                "bet": disproven,
+                "evidence": observation,
+            }
+        )
+    story["who"] = actor
+    story["pain"] = pain
+    return prepare_candidate(
+        workspace,
+        "02-user-stories.yaml",
         yaml.safe_dump(layer, sort_keys=False, allow_unicode=True),
     )

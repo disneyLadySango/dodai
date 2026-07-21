@@ -34,6 +34,9 @@ files:
 12. If the produced behavior itself fails, approve one Presentation-only repair.
     Dodai keeps all four origin layers unchanged, gives the observed failure to
     Codex, and compares the repaired attempt without claiming the business outcome.
+13. If the assumed pain is not observed, return to discovery without an automatic
+    rewrite. Supply a newly observed Who and Pain, inspect the losing record and
+    all downstream impact, then explicitly approve the Layer 2 revision.
 
 The [origin](origin/README.md) is authoritative. The committed
 [projections](projections/) are disposable evidence of what can be regenerated.
@@ -138,6 +141,8 @@ Evidence-guided learning and attempt comparison are defined in
 [ADR 0008](docs/adr/0008-evidence-guided-redelegation.md).
 The origin-preserving inner repair loop is defined in
 [ADR 0009](docs/adr/0009-presentation-repair-inner-loop.md).
+Evidence-led problem rediscovery is defined in
+[ADR 0010](docs/adr/0010-evidence-led-problem-rediscovery.md).
 
 The guided product journey opens in Japanese. Audit mode exposes an
 `English` / `日本語` control so the product owner can inspect the complete

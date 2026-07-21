@@ -36,6 +36,7 @@ from dodai.learning import (
     load_interaction_evidence,
     origin_snapshot_digest,
     prepare_reverification_candidate,
+    prepare_story_rediscovery_candidate,
     record_interaction_evidence,
 )
 from dodai.outer_loop import evaluate_telemetry
@@ -580,9 +581,15 @@ def _ready(store: ProductStore, bet: ProductBet, message: str = "") -> str:
         projections = "".join(
             f"<li><code>{escape(item)}</code></li>" for item in candidate.affected_projections
         )
+        rediscovery_context = (
+            "<p><strong>敗戦記録:</strong> 現在の課題の見立てと、確認できなかった証拠を旧Storyに残します。</p>"
+            if bet.problem_rediscovery_status == "candidate"
+            else ""
+        )
         pending = (
             '<section class="panel"><h2>変更候補の影響</h2>'
             f"<p>変更する最上位層: <strong>{escape(bet.pending_layer)}</strong></p>"
+            f"{rediscovery_context}"
             f'<div class="grid"><div><h3>影響する原点レコード</h3><ul>{records}</ul></div>'
             f"<div><h3>再生成する射影</h3><ul>{projections}</ul></div></div>"
             "<p>承認前は正本を変更しません。</p>"
@@ -612,6 +619,17 @@ def _ready(store: ProductStore, bet: ProductBet, message: str = "") -> str:
             "原点を変えない1回のPresentation修復を承認する</label>"
             '<button class="primary">Presentationだけを修復する →</button></form></section>'
         )
+    rediscovery = ""
+    if bet.problem_rediscovery_status == "discovering":
+        rediscovery = (
+            '<section class="panel"><span class="number">課題を再発見する</span>'
+            "<h2>新しく観測した人と困りごとを教えてください。</h2>"
+            "<p>現在の課題を自動では書き換えません。新しい観測を第2層の変更候補として影響確認します。</p>"
+            f'<form method="post" action="/projects/{bet.project_id}/learning/rediscover">'
+            '<label>新しく観測した人</label><input name="actor" required>'
+            '<label>その人が実際に困っていたこと</label><textarea name="pain" required></textarea>'
+            '<button class="primary">第2層の変更候補を確認する →</button></form></section>'
+        )
     return _layout(
         bet.name,
         f'<p class="meta">{escape(bet.name)}</p><h1>開発をCodexへ委譲し、証拠で判断する。</h1>{_steps("ready")}{_intent(bet)}{notice}'
@@ -630,7 +648,7 @@ def _ready(store: ProductStore, bet: ProductBet, message: str = "") -> str:
         + '/change">'
         "<h2>意図を変更する</h2><p>実装方法ではなく、変えたい意味や成果を日本語で書いてください。</p>"
         '<textarea name="request" required></textarea><button>影響をプレビュー →</button></form></section>'
-        f'{pending}{proposal}{repair}<section class="panel"><h2>承認と学習の履歴</h2>{_history(workspace)}</section>',
+        f'{pending}{proposal}{repair}{rediscovery}<section class="panel"><h2>承認と学習の履歴</h2>{_history(workspace)}</section>',
     )
 
 
@@ -1038,22 +1056,36 @@ def create_portal_application(
                     "422 Unprocessable Entity",
                 )
             learning_change = bet.learning_change
+            rediscovery_change = bet.problem_rediscovery_status == "candidate"
             changed = store.update(
                 project_id,
                 pending_candidate="",
                 pending_layer="",
                 error="",
                 model_requests=bet.model_requests + 1,
-                delegation_status="planned" if learning_change else bet.delegation_status,
+                delegation_status=(
+                    "planned" if learning_change or rediscovery_change else bet.delegation_status
+                ),
                 delegation_feedback=(
-                    load_interaction_evidence(Path(bet.interaction_evidence))["observation"]
-                    if learning_change
-                    else bet.delegation_feedback
+                    ""
+                    if rediscovery_change
+                    else (
+                        load_interaction_evidence(Path(bet.interaction_evidence))["observation"]
+                        if learning_change
+                        else bet.delegation_feedback
+                    )
                 ),
                 delegation_accepted=False if learning_change else bet.delegation_accepted,
                 learning_change=False,
                 presentation_repair_status=(
-                    "not_started" if learning_change else bet.presentation_repair_status
+                    "not_started"
+                    if learning_change or rediscovery_change
+                    else bet.presentation_repair_status
+                ),
+                actor=bet.rediscovered_actor if rediscovery_change else bet.actor,
+                pain=bet.rediscovered_pain if rediscovery_change else bet.pain,
+                problem_rediscovery_status=(
+                    "completed" if rediscovery_change else bet.problem_rediscovery_status
                 ),
             )
             return _respond(
@@ -1061,15 +1093,29 @@ def create_portal_application(
                 _ready(
                     store,
                     changed,
-                    "第4層を承認しました。StoryとACは固定したまま再委譲できます。"
-                    if learning_change
+                    (
+                        "第4層を承認しました。StoryとACは固定したまま再委譲できます。"
+                        if learning_change
+                        else "新しい課題の見立てを承認し、全射影を再生成しました。"
+                    )
+                    if learning_change or rediscovery_change
                     else "変更を承認し、全射影を再生成しました。",
                 ),
             )
         if action == "change/reject" and method == "POST":
             if bet.pending_candidate:
                 reject_candidate(store.workspace(project_id), bet.pending_candidate)
-            changed = store.update(project_id, pending_candidate="", pending_layer="", error="")
+            changed = store.update(
+                project_id,
+                pending_candidate="",
+                pending_layer="",
+                error="",
+                problem_rediscovery_status=(
+                    "discovering"
+                    if bet.problem_rediscovery_status == "candidate"
+                    else bet.problem_rediscovery_status
+                ),
+            )
             return _respond(start_response, _ready(store, changed, "変更候補を却下しました。"))
         if action == "learning/evaluate" and method == "POST":
             if bet.delegation_status not in {"completed", "accepted"}:
@@ -1120,6 +1166,20 @@ def create_portal_application(
                         "操作失敗の証拠からPresentationだけを修復します。原点4層は変更しません。",
                     ),
                 )
+            if diagnosis["evidence_kind"] == "problem_not_observed":
+                changed = store.update(
+                    project_id,
+                    interaction_evidence=str(evidence_path),
+                    problem_rediscovery_status="discovering",
+                )
+                return _respond(
+                    start_response,
+                    _ready(
+                        store,
+                        changed,
+                        "現在の課題を自動では書き換えません。新しく観測した人と困りごとから再発見します。",
+                    ),
+                )
             changed = store.update(project_id, interaction_evidence=str(evidence_path))
             message = (
                 "実際の操作で成果が確認できました。採用するか判断できます。"
@@ -1127,6 +1187,35 @@ def create_portal_application(
                 else f"{diagnosis['failure_layer']}を次の学習対象として記録しました。"
             )
             return _respond(start_response, _ready(store, changed, message))
+        if action == "learning/rediscover" and method == "POST":
+            if bet.problem_rediscovery_status != "discovering":
+                return _respond(start_response, "Discovery evidence missing", "409 Conflict")
+            values = _form(environ)
+            try:
+                candidate = prepare_story_rediscovery_candidate(
+                    store.workspace(project_id),
+                    Path(bet.interaction_evidence),
+                    actor=values.get("actor", ""),
+                    pain=values.get("pain", ""),
+                )
+            except ValueError as error:
+                return _respond(
+                    start_response,
+                    _ready(store, bet, str(error)),
+                    "422 Unprocessable Entity",
+                )
+            changed = store.update(
+                project_id,
+                pending_candidate=candidate.candidate_id,
+                pending_layer="第2層",
+                problem_rediscovery_status="candidate",
+                rediscovered_actor=values.get("actor", "").strip(),
+                rediscovered_pain=values.get("pain", "").strip(),
+            )
+            return _respond(
+                start_response,
+                _ready(store, changed, "敗戦記録を残す第2層候補を作成しました。"),
+            )
         if action == "learning/repair" and method == "POST":
             values = _form(environ)
             if bet.presentation_repair_status != "proposed":

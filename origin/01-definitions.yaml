@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 1
   name: definitions
-revision: 10
+revision: 11
 terms:
   - id: origin
     definition: The sole authority for product intent and constraints jointly maintained by people and AI agents.
@@ -138,6 +138,9 @@ terms:
     allowed_layers: [1, 2, 3, 4]
   - id: presentation_repair
     definition: A bounded reconstruction of produced behavior from unchanged approved origin after interaction evidence shows that behavior failed.
+    allowed_layers: [1, 2, 3, 4]
+  - id: problem_rediscovery
+    definition: A governed return to Who and Pain after evidence does not confirm the current problem account, preserving the disproven account as learning.
     allowed_layers: [1, 2, 3, 4]
 boundary_terms:
   story_solution_vocabulary:

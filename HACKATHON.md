@@ -31,6 +31,8 @@ Do not record private eligibility documents in this repository.
       and compares two bounded Codex delegation attempts.
 - [x] A behavior-failure path can repair only the disposable Presentation while
       preserving all four approved origin layers.
+- [x] An unconfirmed problem account opens human-guided discovery and preserves
+      the disproven Story as a losing record before a governed Layer 2 revision.
 - [x] The submitted project installs and runs consistently on its intended platform.
 - [ ] The project behaves as shown in the description and demo video.
 - [x] Work performed during the submission period is traceable through dated commits and Codex sessions.

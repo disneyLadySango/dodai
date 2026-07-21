@@ -949,6 +949,89 @@ def test_behavior_failure_repairs_only_presentation_and_keeps_outcome_unconfirme
     assert runner.calls == 2
 
 
+def test_unobserved_problem_opens_discovery_then_governs_a_layer_two_revision(
+    project: Path,
+) -> None:
+    runner = RecordingDelegationRunner()
+    application = create_portal_application(
+        project,
+        provider_factory=SampleContentProvider,
+        delegation_runner_factory=lambda: runner,
+    )
+    project_id = create_bet(application)
+    advance_to_generation(application, project_id)
+    request(application, f"/projects/{project_id}/generate", "POST", {"consent": "yes"})
+    wait_for(application, project_id, "委譲結果と証拠")
+    request(application, f"/projects/{project_id}/delegate", "POST", {"consent": "yes"})
+    wait_for(application, project_id, "Codexの委譲結果")
+    workspace = project / ".dodai/workspaces" / project_id
+    story_before = (workspace / "origin/02-user-stories.yaml").read_bytes()
+
+    _, _, discovery = request(
+        application,
+        f"/projects/{project_id}/learning/evaluate",
+        "POST",
+        {
+            "pain_present": "no",
+            "behavior_worked": "yes",
+            "outcome_achieved": "yes",
+            "observation": "想定した判断の迷いは、実際の担当者には確認できなかった。",
+        },
+    )
+    bet = ProductStore(project).load(project_id)
+
+    assert "課題を自動では書き換えません" in discovery
+    assert "新しく観測した人と困りごと" in discovery
+    assert bet.pending_candidate == ""
+    assert bet.problem_rediscovery_status == "discovering"
+    assert (workspace / "origin/02-user-stories.yaml").read_bytes() == story_before
+
+    _, _, candidate_page = request(
+        application,
+        f"/projects/{project_id}/learning/rediscover",
+        "POST",
+        {
+            "actor": "委譲結果を承認するプロダクト責任者",
+            "pain": "複数の観測証拠を比較できず、次の判断に進めない",
+        },
+    )
+    bet = ProductStore(project).load(project_id)
+    candidate = yaml.safe_load(
+        (workspace / ".dodai/candidates" / f"{bet.pending_candidate}.yaml").read_text()
+    )
+
+    assert "第2層" in candidate_page
+    assert "敗戦記録" in candidate_page
+    assert candidate["layer_file"] == "02-user-stories.yaml"
+    assert "ac_primary_outcome" in candidate["affected_records"]
+    assert (workspace / "origin/02-user-stories.yaml").read_bytes() == story_before
+
+    request(application, f"/projects/{project_id}/change/reject", "POST")
+    assert ProductStore(project).load(project_id).problem_rediscovery_status == "discovering"
+    assert (workspace / "origin/02-user-stories.yaml").read_bytes() == story_before
+    request(
+        application,
+        f"/projects/{project_id}/learning/rediscover",
+        "POST",
+        {
+            "actor": "委譲結果を承認するプロダクト責任者",
+            "pain": "複数の観測証拠を比較できず、次の判断に進めない",
+        },
+    )
+
+    _, _, approved = request(application, f"/projects/{project_id}/change/approve", "POST")
+    story = yaml.safe_load((workspace / "origin/02-user-stories.yaml").read_text())["stories"][0]
+    updated = ProductStore(project).load(project_id)
+
+    assert "新しい課題の見立て" in approved
+    assert story["who"] == "委譲結果を承認するプロダクト責任者"
+    assert story["pain"] == "複数の観測証拠を比較できず、次の判断に進めない"
+    assert story["losing_records"][0]["evidence"].startswith("想定した判断")
+    assert updated.actor == story["who"]
+    assert updated.pain == story["pain"]
+    assert updated.delegation_status == "planned"
+
+
 def test_failed_codex_delegation_is_resumable_without_losing_intent(project: Path) -> None:
     runner = FailOnceDelegationRunner()
     application = create_portal_application(
