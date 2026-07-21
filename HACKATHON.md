@@ -27,6 +27,8 @@ Do not record private eligibility documents in this repository.
 - [x] The project fits one track: Apps for Your Life, Work and Productivity, Developer Tools, or Education.
 - [x] Codex is used meaningfully to build the project.
 - [x] GPT-5.6 is used meaningfully and its contribution can be demonstrated.
+- [x] A real-mode vertical run records interaction evidence, revises only verification,
+      and compares two bounded Codex delegation attempts.
 - [x] The submitted project installs and runs consistently on its intended platform.
 - [ ] The project behaves as shown in the description and demo video.
 - [x] Work performed during the submission period is traceable through dated commits and Codex sessions.
