@@ -106,9 +106,7 @@ def load_interaction_evidence(path: Path) -> dict[str, Any]:
     return value
 
 
-def prepare_reverification_candidate(
-    workspace: Path, evidence_path: Path
-) -> CandidateRevision:
+def prepare_reverification_candidate(workspace: Path, evidence_path: Path) -> CandidateRevision:
     evidence = load_interaction_evidence(evidence_path)
     if evidence.get("diagnosis", {}).get("evidence_kind") != "behavior_passed_outcome_failed":
         raise ValueError("Only an observed outcome gap can revise verification.")

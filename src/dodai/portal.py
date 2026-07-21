@@ -442,20 +442,20 @@ def _delegation_result(store: ProductStore, bet: ProductBet) -> str:
             value = load_interaction_evidence(path)
             if int(value.get("attempt", 0)) == int(previous["attempt"]):
                 observations.append(escape(str(value.get("observation", ""))))
-        changed = {
-            str(item["path"]): str(item["digest"]) for item in previous["artifacts"]
-        } != {str(item["path"]): str(item["digest"]) for item in current["artifacts"]}
+        changed = {str(item["path"]): str(item["digest"]) for item in previous["artifacts"]} != {
+            str(item["path"]): str(item["digest"]) for item in current["artifacts"]
+        }
         comparison = (
             '<section class="notice"><strong>'
-            f'試行{previous["attempt"]} → 試行{current["attempt"]}</strong>'
-            f'<p>成果物: {len(previous["artifacts"])}件 → {len(current["artifacts"])}件 '
-            f'（内容は{"変化あり" if changed else "同一"}）</p>'
-            f'<p>前回の操作証拠: {" / ".join(observations) or "記録なし"}</p></section>'
+            f"試行{previous['attempt']} → 試行{current['attempt']}</strong>"
+            f"<p>成果物: {len(previous['artifacts'])}件 → {len(current['artifacts'])}件 "
+            f"（内容は{'変化あり' if changed else '同一'}）</p>"
+            f"<p>前回の操作証拠: {' / '.join(observations) or '記録なし'}</p></section>"
         )
     learning_form = (
         '<section class="panel"><span class="number">触って分かったこと</span>'
-        '<h3>この成果で、本当に前へ進めましたか？</h3>'
-        '<p>専門用語や失敗した層を選ぶ必要はありません。事実だけを教えてください。</p>'
+        "<h3>この成果で、本当に前へ進めましたか？</h3>"
+        "<p>専門用語や失敗した層を選ぶ必要はありません。事実だけを教えてください。</p>"
         f'<form method="post" action="/projects/{bet.project_id}/learning/evaluate">'
         '<label>困りごとは今もありましたか？</label><select name="pain_present" required>'
         '<option value="yes">はい</option><option value="no">いいえ</option><option value="unsure">まだ分からない</option></select>'
@@ -464,7 +464,7 @@ def _delegation_result(store: ProductStore, bet: ProductBet) -> str:
         '<label>望んだ結果になりましたか？</label><select name="outcome_achieved" required>'
         '<option value="yes">はい</option><option value="no">いいえ</option><option value="unsure">まだ分からない</option></select>'
         '<label>実際に見た・起きた事実</label><textarea name="observation" required></textarea>'
-        '<button>結果を記録して、次を判断する →</button></form></section>'
+        "<button>結果を記録して、次を判断する →</button></form></section>"
     )
     return (
         f'<section class="panel"><span class="number">実リポジトリへの試行 {bet.delegation_attempts}</span>'
@@ -1056,10 +1056,14 @@ def create_portal_application(
                 )
                 recorded = load_interaction_evidence(evidence_path)
             except ValueError as error:
-                return _respond(start_response, _ready(store, bet, str(error)), "422 Unprocessable Entity")
+                return _respond(
+                    start_response, _ready(store, bet, str(error)), "422 Unprocessable Entity"
+                )
             diagnosis = recorded["diagnosis"]
             if diagnosis["evidence_kind"] == "behavior_passed_outcome_failed":
-                candidate = prepare_reverification_candidate(store.workspace(project_id), evidence_path)
+                candidate = prepare_reverification_candidate(
+                    store.workspace(project_id), evidence_path
+                )
                 changed = store.update(
                     project_id,
                     pending_candidate=candidate.candidate_id,
