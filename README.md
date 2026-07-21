@@ -31,6 +31,9 @@ files:
     meaning, and their Story-to-AC-to-test evidence. If verified behavior misses
     the outcome, approve a Layer 4 revision and compare the next attempt without
     changing the approved Story or AC.
+12. If the produced behavior itself fails, approve one Presentation-only repair.
+    Dodai keeps all four origin layers unchanged, gives the observed failure to
+    Codex, and compares the repaired attempt without claiming the business outcome.
 
 The [origin](origin/README.md) is authoritative. The committed
 [projections](projections/) are disposable evidence of what can be regenerated.
@@ -133,6 +136,8 @@ The experienceable delivery contract and its security tradeoffs are recorded in
 [ADR 0007](docs/adr/0007-static-delegated-product-contract.md).
 Evidence-guided learning and attempt comparison are defined in
 [ADR 0008](docs/adr/0008-evidence-guided-redelegation.md).
+The origin-preserving inner repair loop is defined in
+[ADR 0009](docs/adr/0009-presentation-repair-inner-loop.md).
 
 The guided product journey opens in Japanese. Audit mode exposes an
 `English` / `日本語` control so the product owner can inspect the complete
