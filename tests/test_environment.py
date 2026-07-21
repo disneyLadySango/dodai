@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from dodai.environment import load_local_environment
@@ -19,9 +20,9 @@ def test_local_environment_loads_supported_keys_without_overwriting(
 
     load_local_environment(tmp_path)
 
-    assert __import__("os").environ["OPENAI_API_KEY"] == "local-openai-key"
-    assert __import__("os").environ["CODEX_API_KEY"] == "already-set"
-    assert "UNRELATED_SECRET" not in __import__("os").environ
+    assert os.environ["OPENAI_API_KEY"] == "local-openai-key"
+    assert os.environ["CODEX_API_KEY"] == "already-set"
+    assert "UNRELATED_SECRET" not in os.environ
 
 
 def test_worktree_uses_shared_repository_environment(tmp_path: Path, monkeypatch) -> None:
@@ -35,4 +36,4 @@ def test_worktree_uses_shared_repository_environment(tmp_path: Path, monkeypatch
 
     load_local_environment(worktree)
 
-    assert __import__("os").environ["OPENAI_API_KEY"] == "shared-key"
+    assert os.environ["OPENAI_API_KEY"] == "shared-key"
