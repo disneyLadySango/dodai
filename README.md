@@ -26,6 +26,11 @@ files:
 8. Enter outcome evidence and see whether it disproves problem understanding,
    verification, or the produced presentation, or remains inconclusive.
 9. Return later, see each bet's current stage and next decision, and resume safely.
+10. Review a bounded Codex plan, explicitly consent once, and delegate into a
+    repository owned by the product bet.
+11. Inspect changed file contents, successful verification commands, stakeholder
+    meaning, and their Story-to-AC-to-test evidence; accept or re-delegate without
+    changing the approved intent.
 
 The [origin](origin/README.md) is authoritative. The committed
 [projections](projections/) are disposable evidence of what can be regenerated.
@@ -38,6 +43,7 @@ are mapped in [Product Journey and Completion Evidence](docs/PRODUCT_JOURNEY.md)
 - [uv](https://docs.astral.sh/uv/)
 - macOS, Linux, or Windows with a POSIX-like shell for the commands below
 - An OpenAI API key only when deriving fresh content with GPT-5.6
+- An installed and authenticated Codex CLI only for real repository delegation
 
 ## Setup
 
@@ -85,11 +91,12 @@ bash scripts/demo-web.sh
 ```
 
 Open <http://127.0.0.1:8000>. Create a product bet and complete the guided flow
-from pain through success, verification approval, informed generation,
-runnable result, governed change, and telemetry learning. `demo-web.sh` uses the
-inspectable sample provider, so the complete journey requires no credential and
-makes no API request. Product-bet state is resumable under ignored
-`.dodai/workspaces/`.
+from pain through success, verification approval, informed generation, bounded
+delegation, repository evidence, adoption, governed change, and telemetry
+learning. `demo-web.sh` uses inspectable sample providers for both semantic
+derivation and delegation, so the complete journey requires no credential and
+makes no API request. It still changes a real isolated Git repository and runs
+its verification. Product-bet state is resumable under ignored `.dodai/workspaces/`.
 
 To use GPT-5.6 for newly approved origins, set `OPENAI_API_KEY` in the launching
 environment and run without `--sample`:
@@ -101,8 +108,14 @@ uv run dodai --root . showcase
 Dodai shows the maximum external request count, cost guardrail, and cache status
 before consent. A successful approved identity is cached; repeating generation
 for the same origin and pins performs no additional model request.
+Real repository delegation has a separate consent screen. Dodai invokes
+`codex exec` with an ephemeral `workspace-write` sandbox scoped to
+`.dodai/workspaces/<bet>/delegation/repository`, consumes a schema-constrained
+result, and independently derives changed-artifact evidence from Git. Raw Codex
+events, session identifiers, stderr, and environment values are not retained.
 The guided local product-bet design and its MVP boundaries are recorded in
-[ADR 0004](docs/adr/0004-guided-local-product-bets.md).
+[ADR 0004](docs/adr/0004-guided-local-product-bets.md), with the delegation
+boundary in [ADR 0006](docs/adr/0006-bounded-codex-delegation.md).
 
 The guided product journey opens in Japanese. Audit mode exposes an
 `English` / `日本語` control so the product owner can inspect the complete
@@ -118,6 +131,10 @@ feedback and retains registrations across server restarts. It is an
 interchangeable proof sample, not Dodai's product value. The result screen shows
 the approved story, behavioral evidence, stakeholder meaning, and their
 machine-readable mapping in `projections/evidence.yaml`.
+
+The waitlist remains only a deterministic derivation proof. The primary result
+journey shows the Codex-created repository changes, successful verification
+commands, stakeholder meaning, and explicit adoption decision.
 
 ![Generated dodai waitlist browser experience](docs/assets/browser-demo.png)
 

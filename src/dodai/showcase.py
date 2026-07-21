@@ -493,6 +493,7 @@ def create_showcase_application(
 
 
 def serve_showcase(root: Path, host: str, port: int, *, sample: bool = False) -> None:
+    from dodai.delegation import CodexCliRunner, SampleDelegationRunner
     from dodai.portal import create_portal_application
 
     url = f"http://{host}:{port}"
@@ -502,9 +503,13 @@ def serve_showcase(root: Path, host: str, port: int, *, sample: bool = False) ->
     else:
         print("GPT-5.6 is called at most once after explicit generation consent.")
     provider_factory: ProviderFactory = SampleContentProvider if sample else OpenAIContentProvider
+    delegation_runner_factory = SampleDelegationRunner if sample else CodexCliRunner
     audit_application = create_showcase_application(root, provider_factory=provider_factory)
     application = create_portal_application(
-        root, provider_factory=provider_factory, audit_application=audit_application
+        root,
+        provider_factory=provider_factory,
+        delegation_runner_factory=delegation_runner_factory,
+        audit_application=audit_application,
     )
     with make_server(host, port, application) as server:
         try:

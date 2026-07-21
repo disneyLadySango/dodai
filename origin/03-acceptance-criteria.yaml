@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 3
   name: acceptance_criteria
-revision: 6
+revision: 7
 criteria:
   - id: ac_complete_regeneration
     kind: outcome
@@ -136,6 +136,26 @@ criteria:
     kind: outcome
     supports: [story_failure_diagnosis, story_retained_product_learning]
     statement: Given outcome evidence, a person can identify whether it disproves the problem understanding, verification approach, or produced behavior, or whether the evidence is inconclusive, and can see what remains fixed and what changes next.
+  - id: ac_bounded_delegation_consent
+    kind: outcome
+    supports: [story_delegation_handoff_evidence, story_predictable_model_use]
+    statement: Before delegated work begins, a person sees its approved intent, isolated scope, maximum attempt count, and expected evidence, and explicitly consents once.
+  - id: ac_one_delegation_per_approval
+    kind: outcome
+    supports: [story_delegation_handoff_evidence, story_predictable_model_use]
+    statement: Concurrent, repeated, or resumed requests for the same approval never start more than one delegation attempt.
+  - id: ac_complete_delegation_evidence
+    kind: outcome
+    supports: [story_delegation_handoff_evidence, story_authority_drift, story_repeated_translation]
+    statement: A completed delegation presents changed artifacts, verification outcomes, and stakeholder meaning together, with each item traced to the approved story, outcome criterion, and verification.
+  - id: ac_explicit_adoption_decision
+    kind: outcome
+    supports: [story_delegation_handoff_evidence, story_authority_drift]
+    statement: A person can explicitly accept a verified delegation result or leave it unaccepted without changing the approved origin.
+  - id: ac_redelegation_retains_intent
+    kind: outcome
+    supports: [story_delegation_handoff_evidence, story_failure_diagnosis]
+    statement: A person can request another attempt with evidence about the prior result while the approved actor, pain, outcome, and verification remain unchanged.
   - id: guardrail_regeneration_budget
     kind: guardrail
     supports: [ac_complete_regeneration]

@@ -51,6 +51,11 @@ class ProductBet:
     term_definition: str = ""
     verification_status: str = "not_run"
     pending_proposal: str = ""
+    delegation_status: str = "not_started"
+    delegation_attempts: int = 0
+    delegation_error: str = ""
+    delegation_feedback: str = ""
+    delegation_accepted: bool = False
 
 
 @dataclass(frozen=True)
@@ -129,6 +134,19 @@ class ProductStore:
             if current.stage != "generation":
                 return None
             return self.update(project_id, stage="generating", error="")
+
+    def claim_delegation(self, project_id: str) -> ProductBet | None:
+        with self._lock:
+            current = self.load(project_id)
+            if current.delegation_status not in {"not_started", "planned", "failed"}:
+                return None
+            return self.update(
+                project_id,
+                delegation_status="running",
+                delegation_attempts=current.delegation_attempts + 1,
+                delegation_error="",
+                delegation_accepted=False,
+            )
 
 
 def solution_terms(text: str) -> list[str]:

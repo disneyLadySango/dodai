@@ -18,6 +18,10 @@ digests, pins, and raw projection files remain available in audit mode.
 | Generation plan | Inspect projection work, request maximum, cost guardrail, and cache status | Remain stopped until explicit consent and claim one generation under concurrent submission | `test_generation_requires_consent_and_never_requests_same_identity_twice`, `test_concurrent_generation_submissions_claim_one_model_request` |
 | Progress | Leave or revisit while generation runs | Persist progress and move to success or recoverable failure | `test_generation_progress_is_visible_and_survives_navigation` |
 | Result | Judge delegated work against the still-visible actor, pain, and outcome | Show produced artifacts, satisfied and unsatisfied verification, and trace every role presentation to its story, criterion, and specification | `test_approved_story_remains_visible_from_verification_through_result`, `test_delegation_result_distinguishes_proof_sample_and_reports_origin_evidence` |
+| Delegation plan | Review approved intent, isolated scope, one-attempt limit, and expected evidence | Keep Codex stopped until explicit consent and claim one attempt under concurrent submission | `test_codex_delegation_requires_consent_and_starts_only_once` |
+| Repository work | Leave or revisit while Codex works in the bet-owned repository | Preserve progress, constrain writes to the isolated repository, and expose a recoverable failure | `test_failed_codex_delegation_is_resumable_without_losing_intent` |
+| Delegation evidence | Inspect changed file contents, successful verification, stakeholder meaning, and origin evidence | Derive artifact evidence from repository changes and connect every result to Story, AC, and test specification | `test_delegation_result_connects_repository_evidence_to_origin` |
+| Adoption | Accept the result or add prior-result evidence and approve another attempt | Record explicit adoption or retain the same approved origin for re-delegation | `test_result_can_be_accepted_or_redelegated_without_changing_origin` |
 | Change | Describe changed intent in plain language | Identify the highest layer and actual downstream records and projections | `test_ready_journey_previews_changes_and_evaluates_learning` |
 | Approval | Approve or reject the complete candidate | Apply regeneration atomically and retain history | `test_ready_journey_previews_changes_and_evaluates_learning` |
 | Learning | Describe what was observed about the problem, outcome, or produced behavior | Diagnose problem understanding, verification approach, produced presentation, or inconclusive evidence; state what remains fixed and what changes next | `test_outcome_evidence_identifies_the_failed_layer_and_next_change`, `test_ready_journey_previews_changes_and_evaluates_learning` |
@@ -34,12 +38,17 @@ digests, pins, and raw projection files remain available in audit mode.
 - Local product-bet state is written atomically and is ignored by Git.
 - The keyless sample path derives visible meaning from the supplied origin; it
   is not presented as a verified GPT-5.6 result.
+- Real Codex delegation writes only inside a product-bet-owned repository. Raw
+  JSONL events, session identifiers, stderr, and environment values are not
+  persisted. Sample mode exercises the same evidence path without Codex.
 
 ## MVP boundaries
 
 This product intentionally remains local and single-user. SaaS hosting,
 authentication, multitenancy, production telemetry connections, automatic
 deployment, and unrestricted repository generation are not part of this MVP.
+Selecting or mutating an arbitrary existing repository is also outside the MVP;
+delegation is intentionally confined to a repository created for the product bet.
 The audited renderer set currently uses one complete waitlist-shaped vertical
 journey as an interchangeable proof sample and one reusable executable-meaning
 journey. Waitlist generation is not Dodai's product value and does not prove
