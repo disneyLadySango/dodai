@@ -1006,6 +1006,19 @@ def test_unobserved_problem_opens_discovery_then_governs_a_layer_two_revision(
     assert "ac_primary_outcome" in candidate["affected_records"]
     assert (workspace / "origin/02-user-stories.yaml").read_bytes() == story_before
 
+    request(application, f"/projects/{project_id}/change/reject", "POST")
+    assert ProductStore(project).load(project_id).problem_rediscovery_status == "discovering"
+    assert (workspace / "origin/02-user-stories.yaml").read_bytes() == story_before
+    request(
+        application,
+        f"/projects/{project_id}/learning/rediscover",
+        "POST",
+        {
+            "actor": "委譲結果を承認するプロダクト責任者",
+            "pain": "複数の観測証拠を比較できず、次の判断に進めない",
+        },
+    )
+
     _, _, approved = request(application, f"/projects/{project_id}/change/approve", "POST")
     story = yaml.safe_load((workspace / "origin/02-user-stories.yaml").read_text())["stories"][0]
     updated = ProductStore(project).load(project_id)

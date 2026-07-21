@@ -1067,14 +1067,20 @@ def create_portal_application(
                     "planned" if learning_change or rediscovery_change else bet.delegation_status
                 ),
                 delegation_feedback=(
-                    load_interaction_evidence(Path(bet.interaction_evidence))["observation"]
-                    if learning_change
-                    else bet.delegation_feedback
+                    ""
+                    if rediscovery_change
+                    else (
+                        load_interaction_evidence(Path(bet.interaction_evidence))["observation"]
+                        if learning_change
+                        else bet.delegation_feedback
+                    )
                 ),
                 delegation_accepted=False if learning_change else bet.delegation_accepted,
                 learning_change=False,
                 presentation_repair_status=(
-                    "not_started" if learning_change else bet.presentation_repair_status
+                    "not_started"
+                    if learning_change or rediscovery_change
+                    else bet.presentation_repair_status
                 ),
                 actor=bet.rediscovered_actor if rediscovery_change else bet.actor,
                 pain=bet.rediscovered_pain if rediscovery_change else bet.pain,
@@ -1099,7 +1105,17 @@ def create_portal_application(
         if action == "change/reject" and method == "POST":
             if bet.pending_candidate:
                 reject_candidate(store.workspace(project_id), bet.pending_candidate)
-            changed = store.update(project_id, pending_candidate="", pending_layer="", error="")
+            changed = store.update(
+                project_id,
+                pending_candidate="",
+                pending_layer="",
+                error="",
+                problem_rediscovery_status=(
+                    "discovering"
+                    if bet.problem_rediscovery_status == "candidate"
+                    else bet.problem_rediscovery_status
+                ),
+            )
             return _respond(start_response, _ready(store, changed, "変更候補を却下しました。"))
         if action == "learning/evaluate" and method == "POST":
             if bet.delegation_status not in {"completed", "accepted"}:
