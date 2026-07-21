@@ -1,6 +1,6 @@
 # OpenAI Build Week Compliance Checklist
 
-Last reviewed: 2026-07-20 JST
+Last reviewed: 2026-07-21 JST
 
 This document is the repository-local compliance baseline for OpenAI Build Week 2026. The [Official Rules](https://openai.devpost.com/rules) and official notices remain authoritative. If this checklist conflicts with them, follow the Official Rules and update this document.
 
