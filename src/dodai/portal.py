@@ -983,6 +983,7 @@ def create_portal_application(
                 delegation_feedback=feedback,
                 delegation_accepted=False,
                 delegation_error="",
+                presentation_repair_status="not_started",
             )
             return _respond(
                 start_response,
@@ -1051,6 +1052,9 @@ def create_portal_application(
                 ),
                 delegation_accepted=False if learning_change else bet.delegation_accepted,
                 learning_change=False,
+                presentation_repair_status=(
+                    "not_started" if learning_change else bet.presentation_repair_status
+                ),
             )
             return _respond(
                 start_response,
