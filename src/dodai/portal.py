@@ -19,6 +19,7 @@ from dodai.delegation import (
     DelegationExecutionError,
     DelegationRunner,
     collect_delegation_evidence,
+    load_delegation_attempts,
     load_delegation_evidence,
     prepare_repository,
     write_delegation_evidence,
@@ -30,6 +31,11 @@ from dodai.evolution import (
     load_candidate,
     prepare_candidate,
     reject_candidate,
+)
+from dodai.learning import (
+    load_interaction_evidence,
+    prepare_reverification_candidate,
+    record_interaction_evidence,
 )
 from dodai.outer_loop import evaluate_telemetry
 from dodai.product import (
@@ -427,10 +433,43 @@ def _delegation_result(store: ProductStore, bet: ProductBet) -> str:
         if bet.delegation_accepted
         else ""
     )
+    attempts = load_delegation_attempts(workspace)
+    comparison = ""
+    if len(attempts) >= 2:
+        previous, current = attempts[-2:]
+        observations = []
+        for path in sorted((workspace / ".dodai/interactions").glob("*.yaml")):
+            value = load_interaction_evidence(path)
+            if int(value.get("attempt", 0)) == int(previous["attempt"]):
+                observations.append(escape(str(value.get("observation", ""))))
+        changed = {
+            str(item["path"]): str(item["digest"]) for item in previous["artifacts"]
+        } != {str(item["path"]): str(item["digest"]) for item in current["artifacts"]}
+        comparison = (
+            '<section class="notice"><strong>'
+            f'試行{previous["attempt"]} → 試行{current["attempt"]}</strong>'
+            f'<p>成果物: {len(previous["artifacts"])}件 → {len(current["artifacts"])}件 '
+            f'（内容は{"変化あり" if changed else "同一"}）</p>'
+            f'<p>前回の操作証拠: {" / ".join(observations) or "記録なし"}</p></section>'
+        )
+    learning_form = (
+        '<section class="panel"><span class="number">触って分かったこと</span>'
+        '<h3>この成果で、本当に前へ進めましたか？</h3>'
+        '<p>専門用語や失敗した層を選ぶ必要はありません。事実だけを教えてください。</p>'
+        f'<form method="post" action="/projects/{bet.project_id}/learning/evaluate">'
+        '<label>困りごとは今もありましたか？</label><select name="pain_present" required>'
+        '<option value="yes">はい</option><option value="no">いいえ</option><option value="unsure">まだ分からない</option></select>'
+        '<label>操作は意図した通り完了しましたか？</label><select name="behavior_worked" required>'
+        '<option value="yes">はい</option><option value="no">いいえ</option><option value="unsure">まだ分からない</option></select>'
+        '<label>望んだ結果になりましたか？</label><select name="outcome_achieved" required>'
+        '<option value="yes">はい</option><option value="no">いいえ</option><option value="unsure">まだ分からない</option></select>'
+        '<label>実際に見た・起きた事実</label><textarea name="observation" required></textarea>'
+        '<button>結果を記録して、次を判断する →</button></form></section>'
+    )
     return (
         f'<section class="panel"><span class="number">実リポジトリへの試行 {bet.delegation_attempts}</span>'
         "<h2>Codexの委譲結果</h2>"
-        f"<p>{escape(str(evidence['summary']))}</p>{accepted}"
+        f"<p>{escape(str(evidence['summary']))}</p>{accepted}{comparison}"
         '<section class="notice"><strong>実際に触って判断する</strong><p>Codexが作った成果を隔離された表示領域で操作できます。</p>'
         f'<a class="button primary" href="/projects/{bet.project_id}/delegated-product/" target="_blank">委譲されたプロダクトを開く →</a></section>'
         f'<iframe sandbox="allow-scripts allow-forms" title="委譲されたプロダクト" src="/projects/{bet.project_id}/delegated-product/"></iframe>'
@@ -454,7 +493,7 @@ def _delegation_result(store: ProductStore, bet: ProductBet) -> str:
                 "<button>意図を変えず再委譲を準備する →</button></form>"
             )
         )
-        + "</section>"
+        + f"</section>{learning_form}"
     )
 
 
@@ -564,15 +603,7 @@ def _ready(store: ProductStore, bet: ProductBet, message: str = "") -> str:
         + bet.project_id
         + '/change">'
         "<h2>意図を変更する</h2><p>実装方法ではなく、変えたい意味や成果を日本語で書いてください。</p>"
-        '<textarea name="request" required></textarea><button>影響をプレビュー →</button></form>'
-        '<form class="panel" method="post" action="/projects/' + bet.project_id + '/telemetry">'
-        "<h2>結果から、どこを学ぶ？</h2><p>観測した事実に最も近いものを選ぶと、Dodaiが誤りの層と次の変更を切り分けます。</p>"
-        '<label for="evidence_kind">観測したこと</label><select id="evidence_kind" name="evidence_kind">'
-        '<option value="behavior_failed">作ったものが、決めた通りに動かなかった</option>'
-        '<option value="behavior_passed_outcome_failed">決めた通り動いたが、期待した成果につながらなかった</option>'
-        '<option value="problem_not_observed">想定した困りごと自体が確認できなかった</option>'
-        '<option value="insufficient_evidence">まだ判断できるだけの証拠がない</option></select>'
-        '<label>観測した事実</label><textarea name="evidence" required></textarea><button>誤りの層を診断する →</button></form></section>'
+        '<textarea name="request" required></textarea><button>影響をプレビュー →</button></form></section>'
         f'{pending}{proposal}<section class="panel"><h2>承認と学習の履歴</h2>{_history(workspace)}</section>',
     )
 
@@ -979,21 +1010,74 @@ def create_portal_application(
                     _ready(store, changed, changed.error),
                     "422 Unprocessable Entity",
                 )
+            learning_change = bet.learning_change
             changed = store.update(
                 project_id,
                 pending_candidate="",
                 pending_layer="",
                 error="",
                 model_requests=bet.model_requests + 1,
+                delegation_status="planned" if learning_change else bet.delegation_status,
+                delegation_feedback=(
+                    load_interaction_evidence(Path(bet.interaction_evidence))["observation"]
+                    if learning_change
+                    else bet.delegation_feedback
+                ),
+                delegation_accepted=False if learning_change else bet.delegation_accepted,
+                learning_change=False,
             )
             return _respond(
-                start_response, _ready(store, changed, "変更を承認し、全射影を再生成しました。")
+                start_response,
+                _ready(
+                    store,
+                    changed,
+                    "第4層を承認しました。StoryとACは固定したまま再委譲できます。"
+                    if learning_change
+                    else "変更を承認し、全射影を再生成しました。",
+                ),
             )
         if action == "change/reject" and method == "POST":
             if bet.pending_candidate:
                 reject_candidate(store.workspace(project_id), bet.pending_candidate)
             changed = store.update(project_id, pending_candidate="", pending_layer="", error="")
             return _respond(start_response, _ready(store, changed, "変更候補を却下しました。"))
+        if action == "learning/evaluate" and method == "POST":
+            if bet.delegation_status not in {"completed", "accepted"}:
+                return _respond(start_response, "Delegation result missing", "409 Conflict")
+            values = _form(environ)
+            try:
+                evidence_path = record_interaction_evidence(
+                    store.workspace(project_id),
+                    attempt=bet.delegation_attempts,
+                    pain_present=values.get("pain_present", ""),
+                    behavior_worked=values.get("behavior_worked", ""),
+                    outcome_achieved=values.get("outcome_achieved", ""),
+                    observation=values.get("observation", ""),
+                )
+                recorded = load_interaction_evidence(evidence_path)
+            except ValueError as error:
+                return _respond(start_response, _ready(store, bet, str(error)), "422 Unprocessable Entity")
+            diagnosis = recorded["diagnosis"]
+            if diagnosis["evidence_kind"] == "behavior_passed_outcome_failed":
+                candidate = prepare_reverification_candidate(store.workspace(project_id), evidence_path)
+                changed = store.update(
+                    project_id,
+                    pending_candidate=candidate.candidate_id,
+                    pending_layer="第4層",
+                    interaction_evidence=str(evidence_path),
+                    learning_change=True,
+                )
+                return _respond(
+                    start_response,
+                    _ready(store, changed, "第4層の確かめ方を見直します。StoryとACは固定します。"),
+                )
+            changed = store.update(project_id, interaction_evidence=str(evidence_path))
+            message = (
+                "実際の操作で成果が確認できました。採用するか判断できます。"
+                if diagnosis["evidence_kind"] == "outcome_achieved"
+                else f"{diagnosis['failure_layer']}を次の学習対象として記録しました。"
+            )
+            return _respond(start_response, _ready(store, changed, message))
         if action == "telemetry" and method == "POST":
             values = _form(environ)
             if values.get("evidence_kind"):

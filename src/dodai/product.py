@@ -56,6 +56,8 @@ class ProductBet:
     delegation_error: str = ""
     delegation_feedback: str = ""
     delegation_accepted: bool = False
+    interaction_evidence: str = ""
+    learning_change: bool = False
 
 
 @dataclass(frozen=True)
