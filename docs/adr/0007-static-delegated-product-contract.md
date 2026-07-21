@@ -37,6 +37,11 @@ configuration do not control the attempt.
 Failures are reduced to bounded user-facing categories such as authentication,
 capacity, timeout, invalid result, or missing verification. Raw stdout, stderr,
 environment values, and session identifiers are not persisted or displayed.
+If Codex finishes successfully but its final structured message is absent, Dodai
+recovers the handoff only when the static entry point, stakeholder explanation,
+and at least one successful verification command are independently observable.
+The recovered summary is deterministic and clearly attributed to Dodai rather
+than treated as a model claim.
 
 ## Consequences
 

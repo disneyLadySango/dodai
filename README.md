@@ -120,6 +120,9 @@ person can therefore operate the actual delegated result before accepting it.
 Codex automation ignores unrelated user configuration while retaining CLI
 authentication, so personal profiles or required MCP servers cannot silently
 change the attempt.
+If the final Codex message is absent after a successful run, Dodai can recover a
+bounded handoff from the product entry point, stakeholder document, and observed
+successful verification command instead of discarding otherwise complete work.
 The guided local product-bet design and its MVP boundaries are recorded in
 [ADR 0004](docs/adr/0004-guided-local-product-bets.md), with the delegation
 boundary in [ADR 0006](docs/adr/0006-bounded-codex-delegation.md).

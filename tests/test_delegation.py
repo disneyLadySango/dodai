@@ -162,6 +162,41 @@ def test_codex_cli_failure_exposes_a_safe_actionable_reason(
     assert "sk-secret" not in captured.value.public_message
 
 
+def test_codex_cli_recovers_handoff_from_artifacts_and_successful_commands(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repository = tmp_path / "repository"
+    repository.mkdir()
+    (repository / "product").mkdir()
+    (repository / "product/index.html").write_text("<h1>Usable result</h1>\n")
+    (repository / "STAKEHOLDER.md").write_text(
+        "# Stakeholder handoff\n\nThe approved outcome is ready to inspect.\n"
+    )
+    output = json.dumps(
+        {
+            "type": "item.completed",
+            "item": {
+                "type": "command_execution",
+                "command": "node tests/verify.mjs",
+                "exit_code": 0,
+            },
+        }
+    )
+
+    monkeypatch.setattr("dodai.delegation.shutil.which", lambda _: "/usr/bin/codex")
+    monkeypatch.setattr(
+        "dodai.delegation.subprocess.run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 0, output, ""),
+    )
+
+    result = CodexCliRunner().run(repository, "Implement.")
+
+    assert result.verification_status == "passed"
+    assert result.verification_commands == ("node tests/verify.mjs",)
+    assert "The approved outcome is ready to inspect." in result.stakeholder_summary
+    assert "成果と検証証拠" in result.summary
+
+
 def test_sample_delegation_runs_verification_without_collecting_runtime_cache(
     tmp_path: Path,
 ) -> None:
