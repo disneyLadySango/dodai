@@ -40,6 +40,15 @@ class DelegationRunner(Protocol):
     def run(self, repository: Path, prompt: str) -> DelegationResult: ...
 
 
+class DelegationExecutionError(RuntimeError):
+    """A bounded delegation failure safe to explain without retaining raw output."""
+
+    def __init__(self, reason: str, public_message: str) -> None:
+        super().__init__(reason)
+        self.reason = reason
+        self.public_message = public_message
+
+
 RESULT_SCHEMA = {
     "type": "object",
     "properties": {
@@ -82,6 +91,13 @@ class CodexCliRunner:
             self.executable,
             "exec",
             "--ephemeral",
+            "--ignore-user-config",
+            "-c",
+            'approval_policy="never"',
+            "-c",
+            'shell_environment_policy.inherit="core"',
+            "-c",
+            "shell_environment_policy.ignore_default_excludes=false",
             "--sandbox",
             "workspace-write",
             "--color",
@@ -95,24 +111,55 @@ class CodexCliRunner:
             str(repository),
             prompt,
         ]
-        completed = subprocess.run(
-            command,
-            cwd=repository,
-            env=os.environ.copy(),
-            capture_output=True,
-            text=True,
-            timeout=self.timeout_seconds,
-            check=False,
-        )
+        try:
+            completed = subprocess.run(
+                command,
+                cwd=repository,
+                env=os.environ.copy(),
+                capture_output=True,
+                text=True,
+                timeout=self.timeout_seconds,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as error:
+            raise DelegationExecutionError(
+                "timeout",
+                "Codexの実行時間が上限に達しました。承認済み意図を保ったまま再開できます。",
+            ) from error
         if completed.returncode != 0 or not result_path.exists():
-            raise RuntimeError("Codex did not complete the delegated attempt.")
-        value = json.loads(result_path.read_text(encoding="utf-8"))
-        result = DelegationResult(**value)
+            diagnostic = completed.stderr.lower()
+            if any(
+                term in diagnostic for term in ("401", "unauthorized", "authentication", "login")
+            ):
+                raise DelegationExecutionError(
+                    "authentication",
+                    "Codex CLIの認証を確認してから、同じ意図で再開してください。",
+                )
+            if any(term in diagnostic for term in ("429", "rate limit", "quota")):
+                raise DelegationExecutionError(
+                    "capacity",
+                    "Codexの利用上限により開始できませんでした。時間を置いて同じ意図で再開してください。",
+                )
+            raise DelegationExecutionError(
+                "incomplete",
+                "Codexが完了結果を返しませんでした。承認済み意図を保ったまま再開できます。",
+            )
+        try:
+            value = json.loads(result_path.read_text(encoding="utf-8"))
+            result = DelegationResult(**value)
+        except (json.JSONDecodeError, TypeError) as error:
+            raise DelegationExecutionError(
+                "invalid_result",
+                "Codexの完了結果を検証できませんでした。成果は採用せず、同じ意図で再開できます。",
+            ) from error
         if result.verification_status not in {"passed", "failed"}:
             raise ValueError("Delegation verification status is invalid.")
         commands = _successful_commands(completed.stdout)
         if result.verification_status == "passed" and not commands:
-            raise ValueError("Delegation reported success without executed verification.")
+            raise DelegationExecutionError(
+                "missing_verification",
+                "成功した検証を確認できないため、成果を採用候補にしませんでした。",
+            )
         return DelegationResult(
             summary=result.summary,
             verification_status=result.verification_status,
@@ -126,6 +173,14 @@ class SampleDelegationRunner:
     """Provides a keyless, inspectable delegation path for evaluation."""
 
     def run(self, repository: Path, prompt: str) -> DelegationResult:
+        product = repository / "product"
+        product.mkdir(exist_ok=True)
+        (product / "index.html").write_text(
+            '<!doctype html><html lang="ja"><meta charset="utf-8">'
+            "<title>委譲成果</title><h1>参加を申し込む</h1>"
+            '<button id="join" onclick="this.textContent=\'受付済み\'">参加する</button></html>\n',
+            encoding="utf-8",
+        )
         (repository / "delivery.py").write_text(
             '"""Inspectable delegated result for the approved sample intent."""\n\n'
             "def describe_delivery() -> str:\n"
@@ -176,6 +231,7 @@ def prepare_repository(repository: Path, *, origin_summary: str) -> None:
         "# Delegated product work\n\n"
         "Work only inside this repository. Implement one usable vertical journey from ORIGIN.md. "
         "Choose technical methods independently. Add automated verification and STAKEHOLDER.md. "
+        "Place an immediately usable static web result at product/index.html. "
         "Run the relevant verification before reporting completion. Never include credentials, "
         "tokens, personal data, or Codex session identifiers.\n",
         encoding="utf-8",
@@ -229,6 +285,13 @@ def collect_delegation_evidence(
         )
     if not artifacts:
         raise ValueError("Delegation completed without changed artifacts.")
+    delivery = repository / "product" / "index.html"
+    if (
+        delivery.is_symlink()
+        or not delivery.is_file()
+        or not delivery.resolve().is_relative_to(repository.resolve())
+    ):
+        raise ValueError("Delegation completed without an experienceable product.")
     return DelegationEvidence(
         attempt=attempt,
         status="completed",

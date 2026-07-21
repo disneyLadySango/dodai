@@ -2,6 +2,7 @@ from __future__ import annotations
 
 # ruff: noqa: E501
 import importlib.util
+import mimetypes
 import re
 from collections.abc import Callable, Iterable
 from hashlib import sha256
@@ -15,6 +16,7 @@ import yaml
 
 from dodai.delegation import (
     CodexCliRunner,
+    DelegationExecutionError,
     DelegationRunner,
     collect_delegation_evidence,
     load_delegation_evidence,
@@ -357,7 +359,9 @@ def _delegation_prompt(bet: ProductBet) -> str:
     return (
         "Implement one complete, usable vertical journey that satisfies ORIGIN.md. "
         "Choose the technical approach yourself. Add automated verification and a concise "
-        "STAKEHOLDER.md that explains the result without implementation detail. Run the "
+        "STAKEHOLDER.md that explains the result without implementation detail. Deliver the "
+        "immediately usable product as a self-contained static web experience rooted at "
+        "product/index.html. Run the "
         "verification before finishing. Do not commit changes. Return only the required "
         "structured result."
         f"{feedback}"
@@ -427,6 +431,9 @@ def _delegation_result(store: ProductStore, bet: ProductBet) -> str:
         f'<section class="panel"><span class="number">実リポジトリへの試行 {bet.delegation_attempts}</span>'
         "<h2>Codexの委譲結果</h2>"
         f"<p>{escape(str(evidence['summary']))}</p>{accepted}"
+        '<section class="notice"><strong>実際に触って判断する</strong><p>Codexが作った成果を隔離された表示領域で操作できます。</p>'
+        f'<a class="button primary" href="/projects/{bet.project_id}/delegated-product/" target="_blank">委譲されたプロダクトを開く →</a></section>'
+        f'<iframe sandbox="allow-scripts allow-forms" title="委譲されたプロダクト" src="/projects/{bet.project_id}/delegated-product/"></iframe>'
         f'<div class="notice"><strong>検証: {"PASS" if evidence["verification_status"] == "passed" else "FAIL"}</strong>'
         f"<p>{escape(str(evidence['verification_summary']))}</p>"
         f"<p>成功した検証コマンド: {len(evidence.get('verification_commands', []))}件</p></div>"
@@ -484,6 +491,13 @@ def _complete_delegation(
         result = runner_factory().run(repository, _delegation_prompt(bet))
         evidence = collect_delegation_evidence(repository, result, attempt=bet.delegation_attempts)
         write_delegation_evidence(workspace, evidence)
+    except DelegationExecutionError as error:
+        store.update(
+            bet.project_id,
+            delegation_status="failed",
+            delegation_error=error.public_message,
+        )
+        return
     except Exception:
         store.update(
             bet.project_id,
@@ -670,6 +684,35 @@ def _serve_projection(
         for name, value in response["headers"]
     ]
     start_response(response["status"], headers)
+    return [body]
+
+
+def _serve_delegated_product(
+    repository: Path,
+    relative_path: str,
+    start_response: StartResponse,
+) -> Iterable[bytes]:
+    delivery_root = (repository / "product").resolve()
+    requested = relative_path or "index.html"
+    path = (delivery_root / requested).resolve()
+    if not path.is_relative_to(delivery_root) or path.is_symlink() or not path.is_file():
+        return _respond(start_response, "Not found", "404 Not Found")
+    body = path.read_bytes()
+    media_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+    if media_type.startswith("text/") or media_type in {"application/javascript", "image/svg+xml"}:
+        media_type += "; charset=utf-8"
+    start_response(
+        "200 OK",
+        [
+            ("Content-Type", media_type),
+            ("Content-Length", str(len(body))),
+            (
+                "Content-Security-Policy",
+                "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'",
+            ),
+            ("X-Content-Type-Options", "nosniff"),
+        ],
+    )
     return [body]
 
 
@@ -890,6 +933,19 @@ def create_portal_application(
                     changed,
                     "前回の証拠を追加しました。承認済み意図は変更しません。",
                 ),
+            )
+        if (
+            action == "delegated-product" or action.startswith("delegated-product/")
+        ) and method == "GET":
+            if bet.delegation_status not in {"completed", "accepted"}:
+                return _respond(start_response, "Delegation result missing", "409 Conflict")
+            relative = action.removeprefix("delegated-product/")
+            if action == "delegated-product":
+                relative = ""
+            return _serve_delegated_product(
+                store.workspace(project_id) / "delegation" / "repository",
+                relative,
+                start_response,
             )
         if action == "preview":
             if bet.stage != "ready":

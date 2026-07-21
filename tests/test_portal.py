@@ -8,7 +8,7 @@ from urllib.parse import urlencode
 
 import yaml
 
-from dodai.delegation import DelegationResult
+from dodai.delegation import DelegationExecutionError, DelegationResult
 from dodai.portal import create_portal_application
 from dodai.product import ProductStore
 from dodai.projection import ProjectionContent, SampleContentProvider
@@ -60,6 +60,10 @@ class RecordingDelegationRunner:
         self.calls += 1
         self.prompts.append(prompt)
         repository.mkdir(parents=True, exist_ok=True)
+        (repository / "product").mkdir(exist_ok=True)
+        (repository / "product/index.html").write_text(
+            "<h1>参加を申し込む</h1><button>参加する</button>\n"
+        )
         (repository / "product.py").write_text("def outcome():\n    return 'verified'\n")
         (repository / "test_product.py").write_text(
             "from product import outcome\n\n"
@@ -90,6 +94,13 @@ class FailOnceDelegationRunner(RecordingDelegationRunner):
             self.calls += 1
             raise RuntimeError("temporary delegation failure")
         return super().run(repository, prompt)
+
+
+class AuthenticationFailureRunner(RecordingDelegationRunner):
+    def run(self, repository: Path, prompt: str) -> DelegationResult:
+        raise DelegationExecutionError(
+            "authentication", "Codex CLIの認証を確認してから、同じ意図で再開してください。"
+        )
 
 
 def request(
@@ -731,10 +742,40 @@ def test_delegation_result_connects_repository_evidence_to_origin(project: Path)
     }
     assert {item["path"] for item in evidence["artifacts"]} == {
         "product.py",
+        "product/index.html",
         "test_product.py",
         "STAKEHOLDER.md",
     }
     assert (workspace / "delegation/repository/.git").is_dir()
+
+
+def test_delegated_product_is_immediately_experienceable_and_path_bounded(
+    project: Path,
+) -> None:
+    runner = RecordingDelegationRunner()
+    application = create_portal_application(
+        project,
+        provider_factory=SampleContentProvider,
+        delegation_runner_factory=lambda: runner,
+    )
+    project_id = create_bet(application)
+    advance_to_generation(application, project_id)
+    request(application, f"/projects/{project_id}/generate", "POST", {"consent": "yes"})
+    wait_for(application, project_id, "委譲結果と証拠")
+    request(application, f"/projects/{project_id}/delegate", "POST", {"consent": "yes"})
+    page = wait_for(application, project_id, "Codexの委譲結果")
+
+    status, headers, product = request(application, f"/projects/{project_id}/delegated-product/")
+    escaped_status, _, _ = request(
+        application, f"/projects/{project_id}/delegated-product/../ORIGIN.md"
+    )
+
+    assert "実際に触って判断する" in page
+    assert f"/projects/{project_id}/delegated-product/" in page
+    assert status == "200 OK"
+    assert headers["Content-Type"] == "text/html; charset=utf-8"
+    assert "参加を申し込む" in product
+    assert escaped_status == "404 Not Found"
 
 
 def test_result_can_be_accepted_or_redelegated_without_changing_origin(project: Path) -> None:
@@ -796,3 +837,21 @@ def test_failed_codex_delegation_is_resumable_without_losing_intent(project: Pat
     assert "試行 2" in completed
     assert before == after
     assert runner.calls == 2
+
+
+def test_codex_failure_shows_safe_recovery_reason(project: Path) -> None:
+    application = create_portal_application(
+        project,
+        provider_factory=SampleContentProvider,
+        delegation_runner_factory=AuthenticationFailureRunner,
+    )
+    project_id = create_bet(application)
+    advance_to_generation(application, project_id)
+    request(application, f"/projects/{project_id}/generate", "POST", {"consent": "yes"})
+    wait_for(application, project_id, "委譲結果と証拠")
+
+    request(application, f"/projects/{project_id}/delegate", "POST", {"consent": "yes"})
+    failed = wait_for(application, project_id, "委譲を完了できませんでした")
+
+    assert "Codex CLIの認証を確認" in failed
+    assert "同じ意図で再開" in failed

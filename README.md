@@ -113,9 +113,18 @@ Real repository delegation has a separate consent screen. Dodai invokes
 `.dodai/workspaces/<bet>/delegation/repository`, consumes a schema-constrained
 result, and independently derives changed-artifact evidence from Git. Raw Codex
 events, session identifiers, stderr, and environment values are not retained.
+Each delegation must include an immediately usable static product at
+`product/index.html`. Dodai validates that contract and serves only the bounded
+`product/` tree in a sandboxed frame with outbound connections blocked. The
+person can therefore operate the actual delegated result before accepting it.
+Codex automation ignores unrelated user configuration while retaining CLI
+authentication, so personal profiles or required MCP servers cannot silently
+change the attempt.
 The guided local product-bet design and its MVP boundaries are recorded in
 [ADR 0004](docs/adr/0004-guided-local-product-bets.md), with the delegation
 boundary in [ADR 0006](docs/adr/0006-bounded-codex-delegation.md).
+The experienceable delivery contract and its security tradeoffs are recorded in
+[ADR 0007](docs/adr/0007-static-delegated-product-contract.md).
 
 The guided product journey opens in Japanese. Audit mode exposes an
 `English` / `日本語` control so the product owner can inspect the complete
