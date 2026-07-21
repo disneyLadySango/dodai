@@ -893,6 +893,62 @@ def test_successful_interaction_result_does_not_prepare_an_origin_change(project
     assert ProductStore(project).load(project_id).pending_candidate == ""
 
 
+def test_behavior_failure_repairs_only_presentation_and_keeps_outcome_unconfirmed(
+    project: Path,
+) -> None:
+    runner = RecordingDelegationRunner()
+    application = create_portal_application(
+        project,
+        provider_factory=SampleContentProvider,
+        delegation_runner_factory=lambda: runner,
+    )
+    project_id = create_bet(application)
+    advance_to_generation(application, project_id)
+    request(application, f"/projects/{project_id}/generate", "POST", {"consent": "yes"})
+    wait_for(application, project_id, "委譲結果と証拠")
+    request(application, f"/projects/{project_id}/delegate", "POST", {"consent": "yes"})
+    wait_for(application, project_id, "Codexの委譲結果")
+    workspace = project / ".dodai/workspaces" / project_id
+    origin_before = {path.name: path.read_bytes() for path in (workspace / "origin").glob("*.yaml")}
+
+    _, _, diagnosis = request(
+        application,
+        f"/projects/{project_id}/learning/evaluate",
+        "POST",
+        {
+            "pain_present": "yes",
+            "behavior_worked": "no",
+            "outcome_achieved": "no",
+            "observation": "参加ボタンを押しても完了表示へ進まなかった。",
+        },
+    )
+    bet = ProductStore(project).load(project_id)
+
+    assert "Presentationだけを修復" in diagnosis
+    assert "原点4層は変更しません" in diagnosis
+    assert bet.pending_candidate == ""
+    assert bet.presentation_repair_status == "proposed"
+
+    _, _, plan = request(
+        application,
+        f"/projects/{project_id}/learning/repair",
+        "POST",
+        {"consent": "yes"},
+    )
+    assert "1回の修復を承認" in plan
+    assert ProductStore(project).load(project_id).delegation_status == "planned"
+    request(application, f"/projects/{project_id}/delegate", "POST", {"consent": "yes"})
+    repaired = wait_for(application, project_id, "Codexの委譲結果")
+    origin_after = {path.name: path.read_bytes() for path in (workspace / "origin").glob("*.yaml")}
+
+    assert origin_after == origin_before
+    assert "参加ボタンを押しても" in runner.prompts[-1]
+    assert "動作修復: 検証PASS" in repaired
+    assert "事業成果: 未確認" in repaired
+    assert "試行1 → 試行2" in repaired
+    assert runner.calls == 2
+
+
 def test_failed_codex_delegation_is_resumable_without_losing_intent(project: Path) -> None:
     runner = FailOnceDelegationRunner()
     application = create_portal_application(

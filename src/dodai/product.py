@@ -58,6 +58,8 @@ class ProductBet:
     delegation_accepted: bool = False
     interaction_evidence: str = ""
     learning_change: bool = False
+    presentation_repair_status: str = "not_started"
+    repair_origin_digest: str = ""
 
 
 @dataclass(frozen=True)

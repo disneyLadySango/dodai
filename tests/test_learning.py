@@ -5,6 +5,7 @@ import yaml
 
 from dodai.learning import (
     diagnose_interaction,
+    origin_snapshot_digest,
     prepare_reverification_candidate,
     record_interaction_evidence,
 )
@@ -53,6 +54,18 @@ def test_interaction_evidence_is_immutable_and_linked_to_an_attempt(tmp_path: Pa
     assert value["attempt"] == 1
     assert value["diagnosis"]["failure_layer"] == "第4層"
     assert value["observation"].startswith("申し込みは完了")
+
+
+def test_origin_snapshot_changes_when_any_approved_layer_changes(tmp_path: Path) -> None:
+    origin = tmp_path / "origin"
+    origin.mkdir()
+    for number in range(1, 5):
+        (origin / f"0{number}-layer.yaml").write_text(f"revision: {number}\n")
+    before = origin_snapshot_digest(tmp_path)
+
+    (origin / "04-layer.yaml").write_text("revision: changed\n")
+
+    assert origin_snapshot_digest(tmp_path) != before
 
 
 def test_outcome_gap_prepares_only_a_layer_four_revision(tmp_path: Path) -> None:
