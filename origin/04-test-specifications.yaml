@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 4
   name: test_specifications
-revision: 7
+revision: 8
 specifications:
   - id: spec_origin_change_reaches_all_projections
     verifies: [ac_complete_regeneration]
@@ -204,6 +204,11 @@ specifications:
     given: An unaccepted delegation result and evidence explaining what should improve.
     when: The person requests another attempt.
     then: A new bounded attempt is available with the prior evidence, while the approved actor, pain, outcome, and verification are unchanged.
+  - id: spec_delegated_result_is_immediately_experienced
+    verifies: [ac_experienceable_delegation_result]
+    given: Delegated work has produced a complete result with verification and stakeholder meaning.
+    when: The person judges the result against the approved intent.
+    then: The resulting product behavior can be operated immediately while its verification and stakeholder meaning remain visible and connected to that intent.
   - id: spec_regeneration_stays_within_budget
     verifies: [guardrail_regeneration_budget]
     given: The sample product and documented reference conditions.
