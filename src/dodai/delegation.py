@@ -40,6 +40,15 @@ class DelegationRunner(Protocol):
     def run(self, repository: Path, prompt: str) -> DelegationResult: ...
 
 
+class DelegationExecutionError(RuntimeError):
+    """A bounded delegation failure safe to explain without retaining raw output."""
+
+    def __init__(self, reason: str, public_message: str) -> None:
+        super().__init__(reason)
+        self.reason = reason
+        self.public_message = public_message
+
+
 RESULT_SCHEMA = {
     "type": "object",
     "properties": {
@@ -82,6 +91,13 @@ class CodexCliRunner:
             self.executable,
             "exec",
             "--ephemeral",
+            "--ignore-user-config",
+            "-c",
+            'approval_policy="never"',
+            "-c",
+            'shell_environment_policy.inherit="core"',
+            "-c",
+            "shell_environment_policy.ignore_default_excludes=false",
             "--sandbox",
             "workspace-write",
             "--color",
@@ -95,24 +111,66 @@ class CodexCliRunner:
             str(repository),
             prompt,
         ]
-        completed = subprocess.run(
-            command,
-            cwd=repository,
-            env=os.environ.copy(),
-            capture_output=True,
-            text=True,
-            timeout=self.timeout_seconds,
-            check=False,
-        )
+        try:
+            completed = subprocess.run(
+                command,
+                cwd=repository,
+                env=os.environ.copy(),
+                capture_output=True,
+                text=True,
+                timeout=self.timeout_seconds,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as error:
+            raise DelegationExecutionError(
+                "timeout",
+                "Codexの実行時間が上限に達しました。承認済み意図を保ったまま再開できます。",
+            ) from error
+        commands = _successful_commands(completed.stdout)
+        if completed.returncode == 0 and not result_path.exists():
+            stakeholder_path = repository / "STAKEHOLDER.md"
+            delivery_path = repository / "product" / "index.html"
+            if commands and stakeholder_path.is_file() and delivery_path.is_file():
+                return DelegationResult(
+                    summary="Codexが作成した成果と検証証拠から、Dodaiが委譲結果を復元しました。",
+                    verification_status="passed",
+                    verification_summary=f"成功した検証コマンドを{len(commands)}件確認しました。",
+                    stakeholder_summary=stakeholder_path.read_text(encoding="utf-8")[:4000],
+                    verification_commands=commands,
+                )
         if completed.returncode != 0 or not result_path.exists():
-            raise RuntimeError("Codex did not complete the delegated attempt.")
-        value = json.loads(result_path.read_text(encoding="utf-8"))
-        result = DelegationResult(**value)
+            diagnostic = completed.stderr.lower()
+            if any(
+                term in diagnostic for term in ("401", "unauthorized", "authentication", "login")
+            ):
+                raise DelegationExecutionError(
+                    "authentication",
+                    "Codex CLIの認証を確認してから、同じ意図で再開してください。",
+                )
+            if any(term in diagnostic for term in ("429", "rate limit", "quota")):
+                raise DelegationExecutionError(
+                    "capacity",
+                    "Codexの利用上限により開始できませんでした。時間を置いて同じ意図で再開してください。",
+                )
+            raise DelegationExecutionError(
+                "incomplete",
+                "Codexが完了結果を返しませんでした。承認済み意図を保ったまま再開できます。",
+            )
+        try:
+            value = json.loads(result_path.read_text(encoding="utf-8"))
+            result = DelegationResult(**value)
+        except (json.JSONDecodeError, TypeError) as error:
+            raise DelegationExecutionError(
+                "invalid_result",
+                "Codexの完了結果を検証できませんでした。成果は採用せず、同じ意図で再開できます。",
+            ) from error
         if result.verification_status not in {"passed", "failed"}:
             raise ValueError("Delegation verification status is invalid.")
-        commands = _successful_commands(completed.stdout)
         if result.verification_status == "passed" and not commands:
-            raise ValueError("Delegation reported success without executed verification.")
+            raise DelegationExecutionError(
+                "missing_verification",
+                "成功した検証を確認できないため、成果を採用候補にしませんでした。",
+            )
         return DelegationResult(
             summary=result.summary,
             verification_status=result.verification_status,
@@ -126,6 +184,49 @@ class SampleDelegationRunner:
     """Provides a keyless, inspectable delegation path for evaluation."""
 
     def run(self, repository: Path, prompt: str) -> DelegationResult:
+        product = repository / "product"
+        product.mkdir(exist_ok=True)
+        (product / "index.html").write_text(
+            """<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>まちの夕市</title>
+<style>
+:root{--ink:#16231d;--paper:#fffaf0;--lime:#c9ff5b;--muted:#66736c}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:system-ui,sans-serif}
+main{width:min(760px,calc(100% - 36px));margin:auto;padding:clamp(42px,10vw,90px) 0}
+.eyebrow{font-size:.78rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:clamp(3rem,10vw,6.2rem);line-height:.9;letter-spacing:-.07em;margin:18px 0 24px}
+.lede{font-size:1.15rem;line-height:1.7;max-width:560px;color:var(--muted)}
+form,.result{border:1px solid var(--ink);padding:24px;margin-top:36px;background:white}
+label{display:block;font-weight:850;margin-bottom:8px}
+input{width:100%;padding:14px;border:1px solid #aab1ad;font:inherit}
+button{margin-top:16px;border:0;background:var(--lime);color:var(--ink);padding:15px 20px}
+button{font:inherit;font-weight:900;cursor:pointer}
+.result{display:none;background:#eaffc7}
+.result strong{display:block;font-size:1.4rem;margin-bottom:8px}
+</style>
+</head>
+<body><main><p class="eyebrow">地域イベント参加受付</p><h1>まちの夕市</h1>
+<p class="lede">参加意思を主催者へ伝え、その場で受付済みだと確認できます。</p>
+<form id="join"><label for="name">お名前</label>
+<input id="name" required placeholder="例: 山田 花子">
+<button>参加を申し込む →</button></form>
+<section class="result" id="result" aria-live="polite">
+<strong>受付が完了しました</strong><span id="message"></span></section>
+</main><script>
+document.querySelector('#join').addEventListener('submit',event=>{
+  event.preventDefault();
+  const name=document.querySelector('#name').value;
+  document.querySelector('#join').style.display='none';
+  document.querySelector('#message').textContent=`${name}さんの参加意思を主催者へ届けました。`;
+  document.querySelector('#result').style.display='block';
+});
+</script></body></html>
+""",
+            encoding="utf-8",
+        )
         (repository / "delivery.py").write_text(
             '"""Inspectable delegated result for the approved sample intent."""\n\n'
             "def describe_delivery() -> str:\n"
@@ -176,6 +277,7 @@ def prepare_repository(repository: Path, *, origin_summary: str) -> None:
         "# Delegated product work\n\n"
         "Work only inside this repository. Implement one usable vertical journey from ORIGIN.md. "
         "Choose technical methods independently. Add automated verification and STAKEHOLDER.md. "
+        "Place an immediately usable static web result at product/index.html. "
         "Run the relevant verification before reporting completion. Never include credentials, "
         "tokens, personal data, or Codex session identifiers.\n",
         encoding="utf-8",
@@ -229,6 +331,13 @@ def collect_delegation_evidence(
         )
     if not artifacts:
         raise ValueError("Delegation completed without changed artifacts.")
+    delivery = repository / "product" / "index.html"
+    if (
+        delivery.is_symlink()
+        or not delivery.is_file()
+        or not delivery.resolve().is_relative_to(repository.resolve())
+    ):
+        raise ValueError("Delegation completed without an experienceable product.")
     return DelegationEvidence(
         attempt=attempt,
         status="completed",

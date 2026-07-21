@@ -6,9 +6,9 @@ Product managers and engineers who delegate implementation to AI agents.
 
 ## Promise
 
-**Keep product intent and delegated work aligned.**
+**Keep delegated product work aligned with approved intent.**
 
-Connect approved product intent, verification, executable behavior, and stakeholder meaning—without micromanaging technical methods.
+Connect product intent, observable outcomes, verification, and explanations so you can judge delegated work without directing technical methods.
 
 ## Journey
 
@@ -18,4 +18,4 @@ recognized without creating a duplicate.
 
 ## Why this projection exists
 
-A minimal proof sample in which a visitor understands dodai’s value, joins the waitlist, and remains registered after restart. It demonstrates one vertical journey only and does not imply support for other journeys.
+A visitor understands dodai’s value, joins the waitlist, and remains registered after restart. This minimal journey is an interchangeable proof sample, not evidence of additional supported journeys.

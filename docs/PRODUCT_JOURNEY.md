@@ -21,6 +21,7 @@ digests, pins, and raw projection files remain available in audit mode.
 | Delegation plan | Review approved intent, isolated scope, one-attempt limit, and expected evidence | Keep Codex stopped until explicit consent and claim one attempt under concurrent submission | `test_codex_delegation_requires_consent_and_starts_only_once` |
 | Repository work | Leave or revisit while Codex works in the bet-owned repository | Preserve progress, constrain writes to the isolated repository, and expose a recoverable failure | `test_failed_codex_delegation_is_resumable_without_losing_intent` |
 | Delegation evidence | Inspect changed file contents, successful verification, stakeholder meaning, and origin evidence | Derive artifact evidence from repository changes and connect every result to Story, AC, and test specification | `test_delegation_result_connects_repository_evidence_to_origin` |
+| Delegated product | Operate the actual delegated behavior from the decision screen | Require an experienceable result, serve only its bounded delivery tree, and block repository escape | `test_delegated_product_is_immediately_experienceable_and_path_bounded` |
 | Adoption | Accept the result or add prior-result evidence and approve another attempt | Record explicit adoption or retain the same approved origin for re-delegation | `test_result_can_be_accepted_or_redelegated_without_changing_origin` |
 | Change | Describe changed intent in plain language | Identify the highest layer and actual downstream records and projections | `test_ready_journey_previews_changes_and_evaluates_learning` |
 | Approval | Approve or reject the complete candidate | Apply regeneration atomically and retain history | `test_ready_journey_previews_changes_and_evaluates_learning` |
@@ -41,6 +42,10 @@ digests, pins, and raw projection files remain available in audit mode.
 - Real Codex delegation writes only inside a product-bet-owned repository. Raw
   JSONL events, session identifiers, stderr, and environment values are not
   persisted. Sample mode exercises the same evidence path without Codex.
+- Delegated products run in a sandboxed frame, can load only their bounded
+  static delivery tree, and cannot make outbound connections. Codex automation
+  ignores unrelated user configuration and keeps default secret exclusions for
+  generated commands.
 
 ## MVP boundaries
 

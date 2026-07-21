@@ -4,6 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from dodai.environment import load_local_environment
 from dodai.evolution import (
     approve_candidate,
     attribute_change,
@@ -74,6 +75,7 @@ def _parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     root: Path = args.root.resolve()
+    load_local_environment(root)
     if args.command == "lint":
         report = validate_origin(load_origin(root / "origin"))
         for error in report.errors:

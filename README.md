@@ -98,8 +98,11 @@ derivation and delegation, so the complete journey requires no credential and
 makes no API request. It still changes a real isolated Git repository and runs
 its verification. Product-bet state is resumable under ignored `.dodai/workspaces/`.
 
-To use GPT-5.6 for newly approved origins, set `OPENAI_API_KEY` in the launching
-environment and run without `--sample`:
+To use GPT-5.6 for newly approved origins, copy `.env.example` to `.env`, set
+`OPENAI_API_KEY`, and run without `--sample`. Dodai also respects an existing
+launching environment variable and never overwrites it. A task worktree reuses
+the ignored `.env` from the primary Git checkout, so the key is configured only
+once:
 
 ```bash
 uv run dodai --root . showcase
@@ -113,9 +116,21 @@ Real repository delegation has a separate consent screen. Dodai invokes
 `.dodai/workspaces/<bet>/delegation/repository`, consumes a schema-constrained
 result, and independently derives changed-artifact evidence from Git. Raw Codex
 events, session identifiers, stderr, and environment values are not retained.
+Each delegation must include an immediately usable static product at
+`product/index.html`. Dodai validates that contract and serves only the bounded
+`product/` tree in a sandboxed frame with outbound connections blocked. The
+person can therefore operate the actual delegated result before accepting it.
+Codex automation ignores unrelated user configuration while retaining CLI
+authentication, so personal profiles or required MCP servers cannot silently
+change the attempt.
+If the final Codex message is absent after a successful run, Dodai can recover a
+bounded handoff from the product entry point, stakeholder document, and observed
+successful verification command instead of discarding otherwise complete work.
 The guided local product-bet design and its MVP boundaries are recorded in
 [ADR 0004](docs/adr/0004-guided-local-product-bets.md), with the delegation
 boundary in [ADR 0006](docs/adr/0006-bounded-codex-delegation.md).
+The experienceable delivery contract and its security tradeoffs are recorded in
+[ADR 0007](docs/adr/0007-static-delegated-product-contract.md).
 
 The guided product journey opens in Japanese. Audit mode exposes an
 `English` / `日本語` control so the product owner can inspect the complete
