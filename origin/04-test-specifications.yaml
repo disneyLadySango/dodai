@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 4
   name: test_specifications
-revision: 9
+revision: 10
 specifications:
   - id: spec_origin_change_reaches_all_projections
     verifies: [ac_complete_regeneration]
@@ -224,6 +224,16 @@ specifications:
     given: Prior and current delegation runs exist for one product bet.
     when: The person judges the current result.
     then: Artifact changes, verification evidence, and recorded interaction evidence from both runs are visible as a comparison against the approved intent.
+  - id: spec_behavior_failure_repairs_only_presentation
+    verifies: [ac_presentation_only_repair]
+    given: Interaction evidence shows that produced behavior did not complete as approved.
+    when: The person approves one repair attempt and delegated work completes.
+    then: Produced behavior is rebuilt from the failed observation while all four approved origin layers remain unchanged and no origin revision is proposed.
+  - id: spec_repair_result_separates_behavior_from_outcome
+    verifies: [ac_repair_verification_comparison]
+    given: A failed behavior attempt and its completed presentation repair attempt.
+    when: The person reviews both attempts.
+    then: Artifact and verification changes are compared, repaired behavior is identified only when verification passes, and the business outcome remains unconfirmed until new interaction evidence is recorded.
   - id: spec_regeneration_stays_within_budget
     verifies: [guardrail_regeneration_budget]
     given: The sample product and documented reference conditions.

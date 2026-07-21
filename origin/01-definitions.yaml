@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 1
   name: definitions
-revision: 9
+revision: 10
 terms:
   - id: origin
     definition: The sole authority for product intent and constraints jointly maintained by people and AI agents.
@@ -135,6 +135,9 @@ terms:
     allowed_layers: [1, 2, 3, 4]
   - id: attempt_comparison
     definition: A judgment of observable differences between delegation runs against unchanged or explicitly revised approved intent.
+    allowed_layers: [1, 2, 3, 4]
+  - id: presentation_repair
+    definition: A bounded reconstruction of produced behavior from unchanged approved origin after interaction evidence shows that behavior failed.
     allowed_layers: [1, 2, 3, 4]
 boundary_terms:
   story_solution_vocabulary:
