@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 3
   name: acceptance_criteria
-revision: 8
+revision: 9
 criteria:
   - id: ac_complete_regeneration
     kind: outcome
@@ -160,6 +160,18 @@ criteria:
     kind: outcome
     supports: [story_runnable_result, story_delegation_handoff_evidence]
     statement: After delegation, a person can immediately operate the resulting product behavior while inspecting its verification and stakeholder meaning against the same approved intent.
+  - id: ac_plain_interaction_evidence
+    kind: outcome
+    supports: [story_accessible_learning_loop, story_failure_diagnosis]
+    statement: After operating one delegation result, a person can describe what they observed without choosing a technical failure layer, and the resulting diagnosis remains connected to that run.
+  - id: ac_evidence_guided_reverification
+    kind: outcome
+    supports: [story_failure_diagnosis, story_retained_product_learning]
+    statement: When evidence shows that verified behavior did not achieve the approved outcome, only revised verification is proposed while the supported user story and acceptance criterion remain unchanged until explicit approval.
+  - id: ac_delegation_attempt_comparison
+    kind: outcome
+    supports: [story_delegation_handoff_evidence, story_retained_product_learning]
+    statement: After another delegation run, a person can compare prior and current artifacts, verification, and interaction evidence against the approved intent.
   - id: guardrail_regeneration_budget
     kind: guardrail
     supports: [ac_complete_regeneration]

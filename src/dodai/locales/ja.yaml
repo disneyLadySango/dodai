@@ -101,6 +101,8 @@ records:
   artifact_change: 委譲作業によって生じた、観測可能な追加・変更・削除。
   adoption_decision: 委譲結果を採用するか、再試行を求める人の明示的判断。
   experienceable_result: 委譲結果が承認済み意図を満たすか判断するため、その場で操作できるプロダクトの振る舞い。
+  interaction_evidence: 1回の委譲結果を操作して観測した事実を、変更せず残す記録。
+  attempt_comparison: 同じ、または明示改訂された承認済み意図に対し、複数の委譲試行の観測差を判断すること。
   story_authority_drift: 意図・実行・検証・説明がずれ、何が正しい意味か分からなくなる。
   story_method_micromanagement: 技術的方法の指示に時間を奪われ、ビジネス課題へ集中できない。
   story_repeated_translation: 同じ意図を対象者ごとに翻訳し直し、手間と意味の不一致が生じる。
@@ -158,6 +160,9 @@ records:
   ac_explicit_adoption_decision: 検証済みの委譲結果を明示的に採用するか、原点を変えず未採用にできる。
   ac_redelegation_retains_intent: 前回結果の証拠を添えて、承認済みの人・痛み・成果・検証を変えずに再委譲できる。
   ac_experienceable_delegation_result: 委譲後、その場で成果を操作し、同じ承認済み意図に対する検証と説明を確認できる。
+  ac_plain_interaction_evidence: 技術的な失敗層を選ばず操作結果を説明し、その診断を委譲試行へ接続して残せる。
+  ac_evidence_guided_reverification: 動作しても成果に届かない証拠では、StoryとACを固定し、明示承認前は正本を変えず第4層だけを提案する。
+  ac_delegation_attempt_comparison: 再委譲後、承認済み意図に対する新旧の成果・検証・操作証拠を比較できる。
   guardrail_regeneration_budget: 全射影の再生成を対話的に使える時間と費用へ収める。
   exit_origin_representation: 表現改訂を3回続けてもリビルド不一致なら、現在の表現方式を撤退する。
   spec_origin_change_reaches_all_projections: 原点の1文を変え1回再生成すると、全射影へ反映されることを検証する。
@@ -203,3 +208,6 @@ records:
   spec_result_requires_explicit_adoption: 採用が明示判断として記録され、未採用では原点と証拠が変わらないことを検証する。
   spec_redelegation_preserves_approved_intent: 前回証拠を含む新しい試行でも、承認済みの人・痛み・成果・検証が変わらないことを検証する。
   spec_delegated_result_is_immediately_experienced: 委譲後の成果をその場で操作でき、検証と関係者向け説明が同じ承認済み意図へ接続されることを検証する。
+  spec_plain_observation_identifies_failure_layer: 困りごと・動作・成果と観測事実への回答から、技術層を選ばせず診断し、その試行へ証拠を残すことを検証する。
+  spec_verification_failure_prepares_only_reverification: 動作しても成果に届かない証拠では、StoryとACを固定し、明示承認前に正本を変えず第4層候補だけを作ることを検証する。
+  spec_redelegation_attempts_are_compared: 再委譲後、承認済み意図に対する新旧試行の成果・検証・操作証拠を比較できることを検証する。

@@ -357,11 +357,17 @@ def collect_delegation_evidence(
 
 def write_delegation_evidence(workspace: Path, evidence: DelegationEvidence) -> Path:
     destination = workspace / ".dodai" / "delegation" / "evidence.yaml"
-    destination.parent.mkdir(parents=True, exist_ok=True)
+    rendered = yaml.safe_dump(asdict(evidence), sort_keys=False, allow_unicode=True)
+    archive = destination.parent / "attempts" / f"{evidence.attempt}.yaml"
+    archive.parent.mkdir(parents=True, exist_ok=True)
+    if archive.exists() and archive.read_text(encoding="utf-8") != rendered:
+        raise ValueError("Delegation attempt evidence cannot be overwritten.")
+    if not archive.exists():
+        archive_temporary = archive.with_suffix(".yaml.tmp")
+        archive_temporary.write_text(rendered, encoding="utf-8")
+        archive_temporary.replace(archive)
     temporary = destination.with_suffix(".yaml.tmp")
-    temporary.write_text(
-        yaml.safe_dump(asdict(evidence), sort_keys=False, allow_unicode=True), encoding="utf-8"
-    )
+    temporary.write_text(rendered, encoding="utf-8")
     temporary.replace(destination)
     return destination
 
@@ -373,6 +379,19 @@ def load_delegation_evidence(workspace: Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError("Delegation evidence must be a mapping.")
     return value
+
+
+def load_delegation_attempts(workspace: Path) -> list[dict[str, Any]]:
+    directory = workspace / ".dodai" / "delegation" / "attempts"
+    if not directory.exists():
+        return []
+    attempts = []
+    for path in directory.glob("*.yaml"):
+        value = yaml.safe_load(path.read_text(encoding="utf-8"))
+        if not isinstance(value, dict):
+            raise ValueError("Delegation attempt evidence must be a mapping.")
+        attempts.append(value)
+    return sorted(attempts, key=lambda item: int(item["attempt"]))
 
 
 def _git(repository: Path, *arguments: str) -> str:

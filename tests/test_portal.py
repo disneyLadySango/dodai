@@ -813,6 +813,86 @@ def test_result_can_be_accepted_or_redelegated_without_changing_origin(project: 
     assert runner.calls == 2
 
 
+def test_plain_interaction_result_prepares_reverification_and_compares_attempts(
+    project: Path,
+) -> None:
+    runner = RecordingDelegationRunner()
+    application = create_portal_application(
+        project,
+        provider_factory=SampleContentProvider,
+        delegation_runner_factory=lambda: runner,
+    )
+    project_id = create_bet(application)
+    advance_to_generation(application, project_id)
+    request(application, f"/projects/{project_id}/generate", "POST", {"consent": "yes"})
+    wait_for(application, project_id, "委譲結果と証拠")
+    request(application, f"/projects/{project_id}/delegate", "POST", {"consent": "yes"})
+    page = wait_for(application, project_id, "Codexの委譲結果")
+    workspace = project / ".dodai/workspaces" / project_id
+    story_before = (workspace / "origin/02-user-stories.yaml").read_bytes()
+    criteria_before = (workspace / "origin/03-acceptance-criteria.yaml").read_bytes()
+
+    assert "困りごとは今もありましたか" in page
+    assert "どの層" not in page
+    _, _, diagnosed = request(
+        application,
+        f"/projects/{project_id}/learning/evaluate",
+        "POST",
+        {
+            "pain_present": "yes",
+            "behavior_worked": "yes",
+            "outcome_achieved": "no",
+            "observation": "申し込みは完了したが、主催者に届いたか判断できなかった。",
+        },
+    )
+
+    assert "第4層" in diagnosed
+    assert "StoryとACは固定" in diagnosed
+    assert (workspace / "origin/02-user-stories.yaml").read_bytes() == story_before
+    assert (workspace / "origin/03-acceptance-criteria.yaml").read_bytes() == criteria_before
+
+    _, _, approved = request(application, f"/projects/{project_id}/change/approve", "POST")
+    assert "再委譲" in approved
+    assert (workspace / "origin/02-user-stories.yaml").read_bytes() == story_before
+    assert (workspace / "origin/03-acceptance-criteria.yaml").read_bytes() == criteria_before
+    request(application, f"/projects/{project_id}/delegate", "POST", {"consent": "yes"})
+    compared = wait_for(application, project_id, "Codexの委譲結果")
+
+    assert "試行1 → 試行2" in compared
+    assert "申し込みは完了したが" in compared
+    assert runner.calls == 2
+
+
+def test_successful_interaction_result_does_not_prepare_an_origin_change(project: Path) -> None:
+    runner = RecordingDelegationRunner()
+    application = create_portal_application(
+        project,
+        provider_factory=SampleContentProvider,
+        delegation_runner_factory=lambda: runner,
+    )
+    project_id = create_bet(application)
+    advance_to_generation(application, project_id)
+    request(application, f"/projects/{project_id}/generate", "POST", {"consent": "yes"})
+    wait_for(application, project_id, "委譲結果と証拠")
+    request(application, f"/projects/{project_id}/delegate", "POST", {"consent": "yes"})
+    wait_for(application, project_id, "Codexの委譲結果")
+
+    _, _, page = request(
+        application,
+        f"/projects/{project_id}/learning/evaluate",
+        "POST",
+        {
+            "pain_present": "yes",
+            "behavior_worked": "yes",
+            "outcome_achieved": "yes",
+            "observation": "操作後に、意図した受付完了を確認できた。",
+        },
+    )
+
+    assert "成果が確認できました" in page
+    assert ProductStore(project).load(project_id).pending_candidate == ""
+
+
 def test_failed_codex_delegation_is_resumable_without_losing_intent(project: Path) -> None:
     runner = FailOnceDelegationRunner()
     application = create_portal_application(

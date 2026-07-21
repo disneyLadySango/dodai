@@ -19,9 +19,8 @@ files:
    Dodai owns operational defaults; product-specific language is optional context.
 4. Review a plain-language explanation of intent, checks, and what approval starts.
 5. Review the model-request maximum, cost guardrail, and cache state, then consent.
-6. Judge the delegation result against the still-visible actor, pain, and outcome.
-   Inspect executable behavior, satisfied and unsatisfied verification, and
-   stakeholder meaning with explicit origin evidence.
+6. Operate the delegated result, then answer three plain questions about the pain,
+   behavior, and outcome. Dodai identifies what should change next.
 7. Request a plain-language change and approve or reject its complete impact.
 8. Enter outcome evidence and see whether it disproves problem understanding,
    verification, or the produced presentation, or remains inconclusive.
@@ -29,8 +28,9 @@ files:
 10. Review a bounded Codex plan, explicitly consent once, and delegate into a
     repository owned by the product bet.
 11. Inspect changed file contents, successful verification commands, stakeholder
-    meaning, and their Story-to-AC-to-test evidence; accept or re-delegate without
-    changing the approved intent.
+    meaning, and their Story-to-AC-to-test evidence. If verified behavior misses
+    the outcome, approve a Layer 4 revision and compare the next attempt without
+    changing the approved Story or AC.
 
 The [origin](origin/README.md) is authoritative. The committed
 [projections](projections/) are disposable evidence of what can be regenerated.
@@ -131,6 +131,8 @@ The guided local product-bet design and its MVP boundaries are recorded in
 boundary in [ADR 0006](docs/adr/0006-bounded-codex-delegation.md).
 The experienceable delivery contract and its security tradeoffs are recorded in
 [ADR 0007](docs/adr/0007-static-delegated-product-contract.md).
+Evidence-guided learning and attempt comparison are defined in
+[ADR 0008](docs/adr/0008-evidence-guided-redelegation.md).
 
 The guided product journey opens in Japanese. Audit mode exposes an
 `English` / `日本語` control so the product owner can inspect the complete

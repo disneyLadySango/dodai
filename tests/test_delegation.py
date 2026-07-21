@@ -12,7 +12,9 @@ from dodai.delegation import (
     DelegationResult,
     SampleDelegationRunner,
     collect_delegation_evidence,
+    load_delegation_attempts,
     prepare_repository,
+    write_delegation_evidence,
 )
 
 
@@ -40,6 +42,29 @@ def test_repository_evidence_is_derived_from_git_changes(tmp_path: Path) -> None
     ]
     assert len(evidence.artifacts[0]["digest"]) == 64
     assert evidence.origin_evidence["story"] == "story_primary_pain"
+
+
+def test_each_delegation_attempt_is_archived_for_comparison(tmp_path: Path) -> None:
+    evidence = collect_delegation_evidence_for_archive(tmp_path, attempt=1)
+
+    write_delegation_evidence(tmp_path, evidence)
+    write_delegation_evidence(tmp_path, evidence)
+
+    attempts = load_delegation_attempts(tmp_path)
+    assert [item["attempt"] for item in attempts] == [1]
+    assert (tmp_path / ".dodai/delegation/attempts/1.yaml").is_file()
+
+
+def collect_delegation_evidence_for_archive(workspace: Path, *, attempt: int):
+    repository = workspace / "repository"
+    prepare_repository(repository, origin_summary="# Intent")
+    (repository / "product").mkdir(exist_ok=True)
+    (repository / "product/index.html").write_text("<h1>Result</h1>\n")
+    return collect_delegation_evidence(
+        repository,
+        DelegationResult("Done", "passed", "Passed", "Outcome"),
+        attempt=attempt,
+    )
 
 
 def test_delegation_requires_an_experienceable_product(tmp_path: Path) -> None:
