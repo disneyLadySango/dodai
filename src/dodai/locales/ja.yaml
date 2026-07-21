@@ -104,6 +104,7 @@ records:
   interaction_evidence: 1回の委譲結果を操作して観測した事実を、変更せず残す記録。
   attempt_comparison: 同じ、または明示改訂された承認済み意図に対し、複数の委譲試行の観測差を判断すること。
   presentation_repair: 操作証拠で動作失敗が示された後、承認済み原点を変えずに成果だけを再構築する境界付き修復。
+  problem_rediscovery: 現在の課題が証拠で確認できないとき、否定された見立てを学習として残しながらWhoとPainへ戻る統制された発見。
   story_authority_drift: 意図・実行・検証・説明がずれ、何が正しい意味か分からなくなる。
   story_method_micromanagement: 技術的方法の指示に時間を奪われ、ビジネス課題へ集中できない。
   story_repeated_translation: 同じ意図を対象者ごとに翻訳し直し、手間と意味の不一致が生じる。
@@ -166,6 +167,8 @@ records:
   ac_delegation_attempt_comparison: 再委譲後、承認済み意図に対する新旧の成果・検証・操作証拠を比較できる。
   ac_presentation_only_repair: 動作失敗の操作証拠から、原点4層を変えずにPresentationだけを1回修復できる。
   ac_repair_verification_comparison: 修復前後の動作・成果物・検証を比較し、動作修復を事業成果の達成と混同しない。
+  ac_problem_rediscovery_requires_observation: 現在の困りごとが確認できない証拠から、ユーザーストーリーを自動変更せず発見へ戻れる。
+  ac_disproven_story_is_retained: 新しいWhoとPainの候補に、否定された見立てと証拠を敗戦記録として残し、承認前に全影響を確認できる。
   guardrail_regeneration_budget: 全射影の再生成を対話的に使える時間と費用へ収める。
   exit_origin_representation: 表現改訂を3回続けてもリビルド不一致なら、現在の表現方式を撤退する。
   spec_origin_change_reaches_all_projections: 原点の1文を変え1回再生成すると、全射影へ反映されることを検証する。
@@ -216,3 +219,5 @@ records:
   spec_redelegation_attempts_are_compared: 再委譲後、承認済み意図に対する新旧試行の成果・検証・操作証拠を比較できることを検証する。
   spec_behavior_failure_repairs_only_presentation: 動作失敗の証拠から修復しても、原点4層が変わらず原点変更案も作られないことを検証する。
   spec_repair_result_separates_behavior_from_outcome: 修復前後を比較し、検証済み動作と未確認の事業成果を区別することを検証する。
+  spec_problem_evidence_opens_discovery_without_rewrite: 困りごとが確認できない証拠だけでは原点を変えず、発見入力を開くことを検証する。
+  spec_rediscovered_problem_preserves_loss_and_impact: 新しいWhoとPainの第2層候補に敗戦記録と下位層・射影への全影響が示されることを検証する。

@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 3
   name: acceptance_criteria
-revision: 10
+revision: 11
 criteria:
   - id: ac_complete_regeneration
     kind: outcome
@@ -180,6 +180,14 @@ criteria:
     kind: outcome
     supports: [story_delegation_handoff_evidence, story_retained_product_learning]
     statement: After a presentation repair attempt, a person can compare the failed and repaired behavior, artifacts, and verification without treating repaired behavior as proof that the business outcome occurred.
+  - id: ac_problem_rediscovery_requires_observation
+    kind: outcome
+    supports: [story_failure_diagnosis, story_problem_first_start]
+    statement: Evidence that does not confirm the current pain opens guided discovery without automatically changing the approved user story.
+  - id: ac_disproven_story_is_retained
+    kind: outcome
+    supports: [story_retained_product_learning, story_safe_origin_evolution]
+    statement: A newly observed Who and Pain can become a Layer 2 candidate while the prior problem account and its evidence remain connected as a losing record and every downstream impact is visible before approval.
   - id: guardrail_regeneration_budget
     kind: guardrail
     supports: [ac_complete_regeneration]

@@ -2,7 +2,7 @@ origin: dodai
 layer:
   number: 4
   name: test_specifications
-revision: 10
+revision: 11
 specifications:
   - id: spec_origin_change_reaches_all_projections
     verifies: [ac_complete_regeneration]
@@ -234,6 +234,16 @@ specifications:
     given: A failed behavior attempt and its completed presentation repair attempt.
     when: The person reviews both attempts.
     then: Artifact and verification changes are compared, repaired behavior is identified only when verification passes, and the business outcome remains unconfirmed until new interaction evidence is recorded.
+  - id: spec_problem_evidence_opens_discovery_without_rewrite
+    verifies: [ac_problem_rediscovery_requires_observation]
+    given: Interaction evidence does not confirm the pain in an approved user story.
+    when: Dodai evaluates that evidence before any new problem account is supplied.
+    then: Guided discovery is opened, the evidence remains connected to the current story, and no authoritative origin record changes.
+  - id: spec_rediscovered_problem_preserves_loss_and_impact
+    verifies: [ac_disproven_story_is_retained]
+    given: Problem evidence and a newly observed Who and Pain without prescribed solution language.
+    when: A Layer 2 candidate is reviewed before approval.
+    then: The prior problem account and evidence appear as a losing record, the new account is proposed, and every affected criterion, verification, and active presentation is identified.
   - id: spec_regeneration_stays_within_budget
     verifies: [guardrail_regeneration_budget]
     given: The sample product and documented reference conditions.
